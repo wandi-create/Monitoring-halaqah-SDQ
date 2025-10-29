@@ -1,0 +1,5 @@
+{
+  "name": "Aplikasi Monitoring Halaqah SDQ",
+  "description": "Aplikasi untuk koordinator tahfizh memonitor dan memberikan feedback bulanan kepada guru-guru pengampu halaqah di SDQ Mutiara Sunnah.",
+  "requestFramePermissions": []
+}
