@@ -15,7 +15,7 @@ type ExtendedReport = Report & {
 interface ReportDetailModalProps {
     report: ExtendedReport;
     onClose: () => void;
-    onSave: (updatedReport: Report) => void;
+    onSave: (updatedReport: Report) => Promise<void>;
     currentUser: User;
 }
 
@@ -56,7 +56,7 @@ const renderContentToHTML = (text: string) => {
 };
 
 const normalizeReportField = (fieldData: any, defaultTitle: string): ReportSection[] => {
-  if (Array.isArray(fieldData)) {
+  if (Array.isArray(fieldData) && fieldData.every(item => typeof item === 'object' && item !== null && 'id' in item)) {
     return fieldData;
   }
   if (typeof fieldData === 'string' && fieldData.trim() !== '') {
@@ -67,46 +67,49 @@ const normalizeReportField = (fieldData: any, defaultTitle: string): ReportSecti
 
 
 const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ report, onClose, onSave, currentUser }) => {
-    const [isRead, setIsRead] = useState(report.isRead);
-    const [followUpStatus, setFollowUpStatus] = useState<FollowUpStatus>(report.followUpStatus);
-    const [teacherNotes, setTeacherNotes] = useState(report.teacherNotes);
+    const [isRead, setIsRead] = useState(report.is_read);
+    const [followUpStatus, setFollowUpStatus] = useState<FollowUpStatus>(report.follow_up_status);
+    const [teacherNotes, setTeacherNotes] = useState(report.teacher_notes);
     const [isModified, setIsModified] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
-        setIsRead(report.isRead);
-        setFollowUpStatus(report.followUpStatus);
-        setTeacherNotes(report.teacherNotes);
+        setIsRead(report.is_read);
+        setFollowUpStatus(report.follow_up_status);
+        setTeacherNotes(report.teacher_notes);
         setIsModified(false);
     }, [report]);
 
     useEffect(() => {
-        if (report.isRead !== isRead || report.followUpStatus !== followUpStatus || report.teacherNotes !== teacherNotes) {
+        if (report.is_read !== isRead || report.follow_up_status !== followUpStatus || report.teacher_notes !== teacherNotes) {
             setIsModified(true);
         } else {
             setIsModified(false);
         }
     }, [isRead, followUpStatus, teacherNotes, report]);
 
-    const handleSave = () => {
+    const handleSave = async () => {
+        setIsSaving(true);
         const { halaqahName, className, teacherNames, ...coreReport } = report;
         const updatedReport: Report = {
             ...coreReport,
-            isRead,
-            followUpStatus,
-            teacherNotes,
+            is_read: isRead,
+            follow_up_status: followUpStatus,
+            teacher_notes: teacherNotes,
         };
-        onSave(updatedReport);
+        await onSave(updatedReport);
+        setIsSaving(false);
     };
 
     const isGuru = currentUser.role === 'Guru';
     const followUpOptions: FollowUpStatus[] = ['Belum Dimulai', 'Sedang Berjalan', 'Selesai', 'Butuh Diskusi'];
 
     const reportCategories: { label: string; sections: ReportSection[] }[] = [
-        { label: 'Insight Utama', sections: normalizeReportField(report.mainInsight, 'Insight Utama') },
-        { label: 'Segmentasi Murid', sections: normalizeReportField(report.studentSegmentation, 'Segmentasi Murid') },
-        { label: 'Tantangan yang Teridentifikasi', sections: normalizeReportField(report.identifiedChallenges, 'Tantangan') },
-        { label: 'Rekomendasi Tindak Lanjut', sections: normalizeReportField(report.followUpRecommendations, 'Rekomendasi') },
-        { label: 'Target Bulan Depan', sections: normalizeReportField(report.nextMonthTarget, 'Target') },
+        { label: 'Insight Utama', sections: normalizeReportField(report.main_insight, 'Insight Utama') },
+        { label: 'Segmentasi Murid', sections: normalizeReportField(report.student_segmentation, 'Segmentasi Murid') },
+        { label: 'Tantangan yang Teridentifikasi', sections: normalizeReportField(report.identified_challenges, 'Tantangan') },
+        { label: 'Rekomendasi Tindak Lanjut', sections: normalizeReportField(report.follow_up_recommendations, 'Rekomendasi') },
+        { label: 'Target Bulan Depan', sections: normalizeReportField(report.next_month_target, 'Target') },
     ];
 
 
@@ -139,7 +142,7 @@ const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ report, onClose, 
                                         <div key={section.id} className="bg-white p-5 rounded-lg border">
                                             <h4 className="text-md font-semibold text-gray-700 mb-2">{section.title}</h4>
                                             <div
-                                                className="text-gray-700 leading-relaxed max-w-none"
+                                                className="text-gray-700 leading-relaxed max-w-none prose prose-sm"
                                                 dangerouslySetInnerHTML={{ __html: renderContentToHTML(section.content || '') }}
                                             />
                                         </div>
@@ -207,11 +210,11 @@ const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ report, onClose, 
                     {isGuru && (
                         <button
                             onClick={handleSave}
-                            disabled={!isModified}
+                            disabled={!isModified || isSaving}
                             className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
                         >
                            <SaveIcon className="w-5 h-5 mr-2 -ml-1" />
-                           Simpan Perubahan
+                           {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
                         </button>
                     )}
                 </footer>

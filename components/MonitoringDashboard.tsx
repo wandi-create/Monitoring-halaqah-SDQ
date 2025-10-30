@@ -14,7 +14,7 @@ interface MonitoringDashboardProps {
   classes: SchoolClass[];
   teachers: User[];
   currentUser: User;
-  onUpdateReport: (report: Report) => void;
+  onUpdateReport: (report: Report) => Promise<void>;
 }
 
 const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ classes, teachers, currentUser, onUpdateReport }) => {
@@ -35,7 +35,7 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ classes, teac
         ...report,
         halaqahName: halaqah.name,
         className: schoolClass.name,
-        teacherNames: halaqah.teacherIds.map(id => teachers.find(t => t.id === id)?.name || 'N/A')
+        teacherNames: halaqah.teacher_ids.map(id => teachers.find(t => t.id === id)?.name || 'N/A')
     };
     setSelectedReport(extendedReport);
   };
@@ -81,28 +81,27 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ classes, teac
             <div className="flex justify-between items-start">
               <div>
                 <h2 className="text-lg font-bold text-gray-800">{schoolClass.name}</h2>
-                <p className="text-sm text-gray-500">{schoolClass.shortName}</p>
+                <p className="text-sm text-gray-500">{schoolClass.short_name}</p>
               </div>
-              <span className="bg-teal-400 text-white text-xs font-bold px-3 py-1 rounded-full">{schoolClass.halaqahs.length} Halaqah</span>
+              <span className="bg-teal-400 text-white text-xs font-bold px-3 py-1 rounded-full">{schoolClass.halaqah.length} Halaqah</span>
             </div>
             <div className="mt-4 space-y-3">
-              {schoolClass.halaqahs.map(halaqah => {
+              {schoolClass.halaqah.map(halaqah => {
                 const date = new Date();
                 const currentMonth = date.getMonth() + 1;
                 const currentYear = date.getFullYear();
-                const reportId = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
-                const currentReport = halaqah.reports.find(r => r.id === reportId);
+                const currentReport = halaqah.laporan?.find(r => r.year === currentYear && r.month === currentMonth);
 
                 return (
                   <div key={halaqah.id} className="bg-gray-100/70 rounded-lg p-3">
                     <div className="flex justify-between items-center">
                       <div>
                         <h3 className="font-semibold text-gray-700">{halaqah.name}</h3>
-                        <p className="text-xs text-gray-500 leading-tight mt-1" dangerouslySetInnerHTML={{ __html: getTeacherNames(halaqah.teacherIds) }} />
+                        <p className="text-xs text-gray-500 leading-tight mt-1" dangerouslySetInnerHTML={{ __html: getTeacherNames(halaqah.teacher_ids) }} />
                       </div>
                       <div className="flex items-center space-x-2">
                         {currentReport ? (
-                            currentReport.isRead ? (
+                            currentReport.is_read ? (
                                <div className="flex items-center bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded-full">
                                  <CheckCircleIcon className="w-4 h-4 mr-1"/>
                                  Sudah Dibaca
@@ -137,9 +136,9 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ classes, teac
         <ReportDetailModal
             report={selectedReport}
             onClose={() => setSelectedReport(null)}
-            onSave={(updatedReport) => {
-              onUpdateReport(updatedReport);
-              setSelectedReport(prev => prev ? { ...prev, ...updatedReport } : null);
+            onSave={async (updatedReport) => {
+              await onUpdateReport(updatedReport);
+              setSelectedReport(null);
             }}
             currentUser={currentUser}
         />

@@ -1,15 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import { SchoolClass, User, Report, Halaqah } from '../types';
 import { MONTHS } from '../constants';
-import { UsersIcon, DocumentTextIcon, CheckCircleIcon, EyeIcon, ClockIcon } from './Icons';
+import { UsersIcon, DocumentTextIcon, CheckCircleIcon, EyeIcon, ClockIcon, PencilIcon } from './Icons';
 import ReportDetailModal from './ReportDetailModal';
+import ReportInputModal from './ReportInputModal';
 
 
 interface TeacherDashboardProps {
   currentUser: User;
   classes: SchoolClass[];
   teachers: User[];
-  onUpdateReportStatus: (report: Report) => void;
+  onUpdateReport: (report: Report) => Promise<void>;
 }
 
 type ExtendedHalaqah = Halaqah & {
@@ -36,24 +37,25 @@ const StatCard: React.FC<{ icon: React.ReactNode; title: string; value: string |
 );
 
 
-const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ currentUser, classes, teachers, onUpdateReportStatus }) => {
+const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ currentUser, classes, teachers, onUpdateReport }) => {
     const [selectedReportForDetail, setSelectedReportForDetail] = useState<ExtendedReport | null>(null);
+    const [editingHalaqah, setEditingHalaqah] = useState<ExtendedHalaqah | null>(null);
+
 
     const date = new Date();
     const currentMonth = date.getMonth() + 1;
     const currentYear = date.getFullYear();
 
     const allHalaqahs: ExtendedHalaqah[] = useMemo(() => 
-        classes.flatMap(c => c.halaqahs.map(h => ({ ...h, className: c.name, classId: c.id })))
+        classes.flatMap(c => c.halaqah.map(h => ({ ...h, className: c.name, classId: c.id } as ExtendedHalaqah)))
     , [classes]);
 
     const totalStudents = useMemo(() => {
-        return allHalaqahs.reduce((sum, halaqah) => sum + (halaqah.studentCount || 0), 0);
+        return allHalaqahs.reduce((sum, halaqah) => sum + (halaqah.student_count || 0), 0);
     }, [allHalaqahs]);
 
     const submittedReportsCount = useMemo(() => {
-        const reportId = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
-        return allHalaqahs.filter(h => h.reports.some(r => r.id === reportId)).length;
+        return allHalaqahs.filter(h => h.laporan?.some(r => r.year === currentYear && r.month === currentMonth)).length;
     }, [allHalaqahs, currentMonth, currentYear]);
 
     
@@ -62,9 +64,13 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ currentUser, classe
             ...report,
             halaqahName: halaqah.name,
             className: halaqah.className,
-            teacherNames: halaqah.teacherIds.map(id => teachers.find(t => t.id === id)?.name || 'N/A')
+            teacherNames: halaqah.teacher_ids.map(id => teachers.find(t => t.id === id)?.name || 'N/A')
         });
     }
+
+    const handleSaveReport = async (report: Report, halaqahId: string) => {
+      await onUpdateReport(report);
+    };
 
     return (
         <div className="relative isolate">
@@ -88,11 +94,10 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ currentUser, classe
             </div>
 
             <div className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg border">
-                <h2 className="text-2xl font-bold text-gray-800 mb-5">Laporan Halaqah Anda</h2>
+                <h2 className="text-2xl font-bold text-gray-800 mb-5">Laporan Halaqah Anda ({MONTHS[currentMonth-1]} {currentYear})</h2>
                 <div className="space-y-4">
                     {allHalaqahs.map(halaqah => {
-                        const reportId = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
-                        const currentReport = halaqah.reports.find(r => r.id === reportId);
+                        const currentReport = halaqah.laporan?.find(r => r.year === currentYear && r.month === currentMonth);
 
                         return (
                             <div key={halaqah.id} className="grid grid-cols-1 md:grid-cols-3 items-center gap-4 p-4 rounded-lg border hover:bg-gray-50/80 transition-colors">
@@ -112,6 +117,15 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ currentUser, classe
                                             <span>Belum Diisi</span>
                                         </div>
                                     )}
+                                    
+                                     <button 
+                                        onClick={() => setEditingHalaqah(halaqah)}
+                                        className="flex items-center gap-2 text-sm font-semibold text-white bg-blue-500 hover:bg-blue-600 px-3 py-1.5 rounded-md transition-all"
+                                        aria-label={currentReport ? "Edit Laporan" : "Input Laporan"}
+                                    >
+                                        <PencilIcon className="w-4 h-4"/>
+                                        <span>{currentReport ? "Edit" : "Input"}</span>
+                                    </button>
 
                                     {currentReport && (
                                         <button 
@@ -120,7 +134,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ currentUser, classe
                                             aria-label="Lihat Laporan"
                                         >
                                             <EyeIcon className="w-4 h-4"/>
-                                            <span>Lihat Laporan</span>
+                                            <span>Lihat</span>
                                         </button>
                                     )}
                                 </div>
@@ -134,11 +148,23 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ currentUser, classe
                 <ReportDetailModal
                     report={selectedReportForDetail}
                     onClose={() => setSelectedReportForDetail(null)}
-                    onSave={(updatedReport) => {
-                      onUpdateReportStatus(updatedReport);
-                      setSelectedReportForDetail(prev => prev ? { ...prev, ...updatedReport } : null);
+                    onSave={async (updatedReport) => {
+                      await onUpdateReport(updatedReport);
+                      setSelectedReportForDetail(null);
                     }}
                     currentUser={currentUser}
+                />
+            )}
+
+            {editingHalaqah && (
+                <ReportInputModal 
+                  isOpen={!!editingHalaqah}
+                  onClose={() => setEditingHalaqah(null)}
+                  onSave={handleSaveReport}
+                  schoolClass={classes.find(c => c.id === editingHalaqah.classId)!}
+                  halaqah={editingHalaqah}
+                  existingReport={editingHalaqah.laporan?.find(r => r.year === currentYear && r.month === currentMonth)}
+                  months={MONTHS}
                 />
             )}
         </div>

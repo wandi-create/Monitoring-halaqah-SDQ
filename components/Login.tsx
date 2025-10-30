@@ -1,26 +1,47 @@
 import React, { useState } from 'react';
 import { User } from '../types';
 import { BookOpenIcon } from './Icons';
+import { supabase } from '../lib/supabaseClient';
 
 interface LoginProps {
-  users: User[];
   onLogin: (user: User) => void;
 }
 
-const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
+const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const user = users.find(u => u.email === email && u.password === password);
+    setError('');
+    setIsLoading(true);
 
-    if (user) {
-      setError('');
-      onLogin(user);
-    } else {
-      setError('Email atau password salah.');
+    try {
+      // NOTE: This is an insecure way to handle login.
+      // In a real-world application, use Supabase Auth (supabase.auth.signInWithPassword)
+      // and store only hashed passwords in the database.
+      const { data: user, error: queryError } = await supabase
+        .from('guru')
+        .select('*')
+        .eq('email', email)
+        .eq('password', password) // This is insecure!
+        .single();
+
+      if (queryError) {
+        throw new Error("Email atau password salah.");
+      }
+
+      if (user) {
+        onLogin(user as User);
+      } else {
+        setError('Email atau password salah.');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Terjadi kesalahan saat login.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -79,9 +100,10 @@ const Login: React.FC<LoginProps> = ({ users, onLogin }) => {
           <div>
             <button
               type="submit"
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
+              disabled={isLoading}
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:bg-teal-400"
             >
-              Login
+              {isLoading ? 'Memproses...' : 'Login'}
             </button>
           </div>
         </form>

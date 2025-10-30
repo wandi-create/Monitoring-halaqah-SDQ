@@ -5,16 +5,16 @@ import { PlusIcon, PencilIcon, TrashIcon, CloseIcon, SaveIcon, ArrowUturnLeftIco
 interface HalaqahManagementProps {
   classes: SchoolClass[];
   teachers: User[];
-  onAddHalaqah: (classId: string, newHalaqah: Omit<Halaqah, 'id'|'reports'>) => void;
-  onUpdateHalaqah: (classId: string, updatedHalaqah: Halaqah) => void;
-  onDeleteHalaqah: (classId: string, halaqahId: string) => void;
+  onAddHalaqah: (classId: string, newHalaqah: Omit<Halaqah, 'id'|'laporan'>) => Promise<void>;
+  onUpdateHalaqah: (classId: string, updatedHalaqah: Halaqah) => Promise<void>;
+  onDeleteHalaqah: (classId: string, halaqahId: string) => Promise<void>;
 }
 
 const HalaqahFormModal: React.FC<{
     isOpen: boolean;
     onClose: () => void;
-    onSave: (halaqahData: Omit<Halaqah, 'id'|'reports'> | Halaqah) => void;
-    halaqahData: Omit<Halaqah, 'id'|'reports'|'teacherIds'|'studentCount'> & { teacherIds: string[], studentCount: number } | Halaqah | null;
+    onSave: (halaqahData: Omit<Halaqah, 'id'|'laporan'> | Halaqah) => void;
+    halaqahData: Omit<Halaqah, 'id'|'laporan'|'teacher_ids'|'student_count'> & { teacher_ids: string[], student_count: number } | Halaqah | null;
     teachers: User[];
 }> = ({ isOpen, onClose, onSave, halaqahData, teachers }) => {
     const [name, setName] = useState('');
@@ -26,8 +26,8 @@ const HalaqahFormModal: React.FC<{
     useEffect(() => {
         if (halaqahData) {
             setName(halaqahData.name);
-            setSelectedTeacherIds(halaqahData.teacherIds || []);
-            setStudentCount(halaqahData.studentCount || 0);
+            setSelectedTeacherIds(halaqahData.teacher_ids || []);
+            setStudentCount(halaqahData.student_count || 0);
         } else {
             setName('');
             setSelectedTeacherIds([]);
@@ -45,11 +45,11 @@ const HalaqahFormModal: React.FC<{
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const dataToSave = { name, teacherIds: selectedTeacherIds, studentCount };
+        const dataToSave = { name, teacher_ids: selectedTeacherIds, student_count: studentCount };
         if (isEditMode) {
-            onSave({ ...halaqahData, ...dataToSave, reports: halaqahData.reports || [] });
+            onSave({ ...halaqahData, ...dataToSave, laporan: halaqahData.laporan || [] });
         } else {
-            onSave(dataToSave);
+            onSave(dataToSave as any);
         }
         onClose();
     };
@@ -124,7 +124,7 @@ const HalaqahManagement: React.FC<HalaqahManagementProps> = ({ classes, teachers
         setIsModalOpen(true);
     };
 
-    const handleSave = (halaqahData: Omit<Halaqah, 'id'|'reports'> | Halaqah) => {
+    const handleSave = (halaqahData: Omit<Halaqah, 'id'|'laporan'> | Halaqah) => {
         if (!selectedClassId) return;
         if ('id' in halaqahData) {
             onUpdateHalaqah(selectedClassId, halaqahData);
@@ -132,6 +132,12 @@ const HalaqahManagement: React.FC<HalaqahManagementProps> = ({ classes, teachers
             onAddHalaqah(selectedClassId, halaqahData);
         }
     };
+
+    useEffect(() => {
+        if (!selectedClassId && classes.length > 0) {
+            setSelectedClassId(classes[0].id);
+        }
+    }, [classes, selectedClassId]);
 
     return (
         <>
@@ -167,14 +173,14 @@ const HalaqahManagement: React.FC<HalaqahManagementProps> = ({ classes, teachers
                             </tr>
                         </thead>
                         <tbody>
-                            {selectedClass?.halaqahs.map(halaqah => (
+                            {selectedClass?.halaqah.map(halaqah => (
                                 <tr key={halaqah.id} className="bg-white border-b hover:bg-gray-50">
                                     <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
                                         {halaqah.name}
                                     </th>
-                                    <td className="px-6 py-4">{halaqah.studentCount}</td>
+                                    <td className="px-6 py-4">{halaqah.student_count}</td>
                                     <td className="px-6 py-4">
-                                        {halaqah.teacherIds.map(id => <div key={id}>{getTeacherName(id)}</div>)}
+                                        {halaqah.teacher_ids.map(id => <div key={id}>{getTeacherName(id)}</div>)}
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <button onClick={() => handleOpenEditModal(halaqah)} className="p-2 text-yellow-500 hover:text-yellow-700">
@@ -186,7 +192,7 @@ const HalaqahManagement: React.FC<HalaqahManagementProps> = ({ classes, teachers
                                     </td>
                                 </tr>
                             ))}
-                             {!selectedClass?.halaqahs.length && (
+                             {!selectedClass?.halaqah.length && (
                                 <tr>
                                     <td colSpan={4} className="text-center py-8 text-gray-500">
                                         Belum ada data halaqah untuk kelas ini.

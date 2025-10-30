@@ -5,9 +5,9 @@ import { PlusIcon, PencilIcon, TrashIcon, CloseIcon, SaveIcon, ArrowUturnLeftIco
 interface TeacherManagementProps {
   teachers: User[];
   classes: SchoolClass[];
-  onAddTeacher: (newUser: Omit<User, 'id'>) => void;
-  onUpdateTeacher: (updatedUser: User) => void;
-  onDeleteTeacher: (userId: string) => void;
+  onAddTeacher: (newUser: Omit<User, 'id'>) => Promise<void>;
+  onUpdateTeacher: (updatedUser: User) => Promise<void>;
+  onDeleteTeacher: (userId: string) => Promise<void>;
 }
 
 const TeacherFormModal: React.FC<{
@@ -39,19 +39,19 @@ const TeacherFormModal: React.FC<{
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const dataToSave: Omit<User, 'id'> = { name, email, role };
+        const dataToSave: Omit<User, 'id' | 'password'> & {password?: string} = { name, email, role };
         if (password) {
             dataToSave.password = password;
         }
 
         if(isEditMode) {
-            onSave({ ...teacherData, ...dataToSave });
+            onSave({ ...teacherData, ...dataToSave } as User);
         } else {
             if (!password) {
                 alert('Password is required for new users.');
                 return;
             }
-            onSave(dataToSave);
+            onSave(dataToSave as User);
         }
         onClose();
     };
@@ -131,8 +131,8 @@ const TeacherManagement: React.FC<TeacherManagementProps> = ({ teachers, classes
     
     const getHalaqahAssignments = (teacherId: string) => {
         return classes
-            .flatMap(c => c.halaqahs.map(h => ({ ...h, className: c.shortName })))
-            .filter(h => h.teacherIds.includes(teacherId))
+            .flatMap(c => c.halaqah.map(h => ({ ...h, className: c.short_name })))
+            .filter(h => h.teacher_ids.includes(teacherId))
             .map(h => `${h.className} • ${h.name}`)
             .join(', ');
     };

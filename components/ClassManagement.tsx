@@ -4,16 +4,16 @@ import { PlusIcon, PencilIcon, TrashIcon, CloseIcon, SaveIcon, ArrowUturnLeftIco
 
 interface ClassManagementProps {
   classes: SchoolClass[];
-  onAddClass: (newClass: Omit<SchoolClass, 'id' | 'halaqahs'>) => void;
-  onUpdateClass: (updatedClass: SchoolClass) => void;
-  onDeleteClass: (classId: string) => void;
+  onAddClass: (newClass: Omit<SchoolClass, 'id' | 'halaqah'>) => Promise<void>;
+  onUpdateClass: (updatedClass: SchoolClass) => Promise<void>;
+  onDeleteClass: (classId: string) => Promise<void>;
 }
 
 const ClassFormModal: React.FC<{
     isOpen: boolean;
     onClose: () => void;
-    onSave: (classData: Omit<SchoolClass, 'id' | 'halaqahs'> | SchoolClass) => void;
-    classData: Omit<SchoolClass, 'id' | 'halaqahs'> | SchoolClass | null;
+    onSave: (classData: Omit<SchoolClass, 'id' | 'halaqah'> | SchoolClass) => void;
+    classData: Omit<SchoolClass, 'id' | 'halaqah'> | SchoolClass | null;
 }> = ({ isOpen, onClose, onSave, classData }) => {
     const [name, setName] = useState('');
     const [shortName, setShortName] = useState('');
@@ -24,7 +24,7 @@ const ClassFormModal: React.FC<{
     useEffect(() => {
         if (classData) {
             setName(classData.name);
-            setShortName(classData.shortName);
+            setShortName(classData.short_name);
             setGender(classData.gender);
         } else {
             setName('');
@@ -35,11 +35,11 @@ const ClassFormModal: React.FC<{
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const dataToSave = { name, shortName, gender };
+        const dataToSave = { name, short_name: shortName, gender };
         if(isEditMode) {
             onSave({ ...classData, ...dataToSave });
         } else {
-            onSave(dataToSave);
+            onSave(dataToSave as any);
         }
         onClose();
     };
@@ -105,7 +105,7 @@ const ClassManagement: React.FC<ClassManagementProps> = ({ classes, onAddClass, 
         setIsModalOpen(true);
     };
 
-    const handleSave = (classData: Omit<SchoolClass, 'id' | 'halaqahs'> | SchoolClass) => {
+    const handleSave = (classData: Omit<SchoolClass, 'id' | 'halaqah'> | SchoolClass) => {
         if ('id' in classData) {
             onUpdateClass(classData);
         } else {
@@ -142,14 +142,14 @@ const ClassManagement: React.FC<ClassManagementProps> = ({ classes, onAddClass, 
                         <tr key={schoolClass.id} className="bg-white border-b hover:bg-gray-50">
                             <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
                                 {schoolClass.name}
-                                <p className="text-xs text-gray-500 font-normal">{schoolClass.shortName}</p>
+                                <p className="text-xs text-gray-500 font-normal">{schoolClass.short_name}</p>
                             </th>
                             <td className="px-6 py-4">
                                 <span className={`px-2 py-1 text-xs font-semibold rounded-full ${schoolClass.gender === 'Ikhwan' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800'}`}>
                                     {schoolClass.gender}
                                 </span>
                             </td>
-                            <td className="px-6 py-4">{schoolClass.halaqahs.length}</td>
+                            <td className="px-6 py-4">{schoolClass.halaqah.length}</td>
                             <td className="px-6 py-4 text-right">
                                 <button onClick={() => handleOpenEditModal(schoolClass)} className="p-2 text-yellow-500 hover:text-yellow-700">
                                     <PencilIcon className="w-5 h-5" />

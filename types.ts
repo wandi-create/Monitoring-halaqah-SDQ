@@ -1,10 +1,8 @@
 export interface User {
-  id: string;
+  id: string; // uuid
   name: string;
   email: string;
-  // NOTE: In a real application, this should be a securely hashed password.
-  // Storing plain text passwords is not secure.
-  password?: string; 
+  password?: string; // This should be handled securely, not stored as plain text
   role: 'Koordinator' | 'Guru';
 }
 
@@ -17,31 +15,33 @@ export interface ReportSection {
 }
 
 export interface Report {
-  id: string; // YYYY-MM format
+  id: string; // uuid
+  halaqah_id: string;
   month: number; // 1-12
   year: number;
-  mainInsight: ReportSection[];
-  studentSegmentation: ReportSection[];
-  identifiedChallenges: ReportSection[];
-  followUpRecommendations: ReportSection[];
-  nextMonthTarget: ReportSection[];
-  isRead: boolean;
-  followUpStatus: FollowUpStatus;
-  teacherNotes: string;
+  main_insight: ReportSection[];
+  student_segmentation: ReportSection[];
+  identified_challenges: ReportSection[];
+  follow_up_recommendations: ReportSection[];
+  next_month_target: ReportSection[];
+  is_read: boolean;
+  follow_up_status: FollowUpStatus;
+  teacher_notes: string;
 }
 
 export interface Halaqah {
-  id: string;
+  id: string; // uuid
   name: string;
-  teacherIds: string[];
-  studentCount: number;
-  reports: Report[];
+  teacher_ids: string[]; // array of user ids (uuids)
+  student_count: number;
+  class_id: string; // Foreign key to SchoolClass
+  laporan?: Report[]; // Renamed from 'reports' to match Supabase table name
 }
 
 export interface SchoolClass {
-  id: string;
+  id: string; // uuid
   name: string;
-  shortName: string;
+  short_name: string;
   gender: 'Ikhwan' | 'Akhwat';
-  halaqahs: Halaqah[];
+  halaqah: Halaqah[]; // Renamed from 'halaqahs' to match Supabase table name
 }

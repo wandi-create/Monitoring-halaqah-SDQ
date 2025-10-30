@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { INITIAL_CLASSES, INITIAL_USERS } from './constants';
+
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { supabase } from './lib/supabaseClient';
 import { SchoolClass, Halaqah, Report, User } from './types';
+
 import Sidebar from './components/Sidebar';
 import MonitoringDashboard from './components/MonitoringDashboard';
 import ClassManagement from './components/ClassManagement';
@@ -11,68 +13,93 @@ import TeacherManagement from './components/TeacherManagement';
 import Login from './components/Login';
 import TeacherDashboard from './components/TeacherDashboard';
 import { MenuIcon } from './components/Icons';
+import Loader from './components/Loader';
 
 type View = 'Dashboard Guru' | 'Monitoring' | 'Resume Laporan' | 'Input Laporan' | 'Manajemen Kelas' | 'Manajemen Halaqah' | 'Manajemen Guru';
 
-type AppData = {
-  classes: SchoolClass[];
-  users: User[];
-};
-
 const App: React.FC = () => {
-  const [appData, setAppData] = useState<AppData>(() => {
-    try {
-      const savedData = localStorage.getItem('halaqahData');
-       if (!savedData) {
-            return { classes: INITIAL_CLASSES, users: INITIAL_USERS };
-        }
-        const parsedData = JSON.parse(savedData);
-        if (Array.isArray(parsedData) || !parsedData.users || !parsedData.classes) {
-            // Old format or corrupted data, start fresh
-            return { classes: INITIAL_CLASSES, users: INITIAL_USERS };
-        }
-        // Ensure users have roles
-        parsedData.users = parsedData.users.map((u: User) => ({ ...u, role: u.role || 'Guru' }));
-        return parsedData;
-    } catch (error) {
-      console.error("Could not parse localStorage data:", error);
-      return { classes: INITIAL_CLASSES, users: INITIAL_USERS };
-    }
-  });
+  const [classes, setClasses] = useState<SchoolClass[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isMutating, setIsMutating] = useState(false);
 
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     try {
-        const savedUser = sessionStorage.getItem('currentUser');
-        return savedUser ? JSON.parse(savedUser) : null;
+      const savedUser = sessionStorage.getItem('currentUser');
+      return savedUser ? JSON.parse(savedUser) : null;
     } catch {
-        return null;
+      return null;
     }
   });
 
   const [activeView, setActiveView] = useState<View>('Monitoring');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  useEffect(() => {
-    localStorage.setItem('halaqahData', JSON.stringify(appData));
-  }, [appData]);
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const { data: usersData, error: usersError } = await supabase.from('guru').select('*');
+      if (usersError) throw usersError;
+      setUsers(usersData as User[]);
+
+      const { data: classesData, error: classesError } = await supabase
+        .from('kelas')
+        .select(`*, halaqah(*, laporan(*))`)
+        .order('name', { ascending: true });
+        
+      if (classesError) throw classesError;
+      
+      // Map snake_case from DB to camelCase in JS objects
+      const formattedClasses = classesData.map(c => ({
+          ...c,
+          shortName: c.short_name,
+          halaqahs: c.halaqah.map(h => ({
+              ...h,
+              teacherIds: h.teacher_ids,
+              studentCount: h.student_count,
+              classId: h.class_id,
+              reports: h.laporan.map(r => ({
+                  ...r,
+                  halaqahId: r.halaqah_id,
+                  mainInsight: r.main_insight,
+                  studentSegmentation: r.student_segmentation,
+                  identifiedChallenges: r.identified_challenges,
+                  followUpRecommendations: r.follow_up_recommendations,
+                  nextMonthTarget: r.next_month_target,
+                  isRead: r.is_read,
+                  followUpStatus: r.follow_up_status,
+                  teacherNotes: r.teacher_notes
+              }))
+          }))
+      }));
+      
+      setClasses(formattedClasses as unknown as SchoolClass[]);
+
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      alert("Gagal memuat data dari database.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (currentUser) {
-        sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
-        // Set default view based on role
-        setActiveView(currentUser.role === 'Guru' ? 'Dashboard Guru' : 'Monitoring');
+      fetchData();
     } else {
-        sessionStorage.removeItem('currentUser');
+      setIsLoading(false);
+    }
+  }, [currentUser, fetchData]);
+
+
+  useEffect(() => {
+    if (currentUser) {
+      sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+      setActiveView(currentUser.role === 'Guru' ? 'Dashboard Guru' : 'Monitoring');
+    } else {
+      sessionStorage.removeItem('currentUser');
     }
   }, [currentUser]);
-
-  const setClasses = (updater: (prev: SchoolClass[]) => SchoolClass[]) => {
-    setAppData(prev => ({ ...prev, classes: updater(prev.classes) }));
-  };
-
-  const setUsers = (updater: (prev: User[]) => User[]) => {
-    setAppData(prev => ({ ...prev, users: updater(prev.users) }));
-  };
 
   const handleLogin = (user: User) => {
     setCurrentUser(user);
@@ -84,162 +111,224 @@ const App: React.FC = () => {
   };
   
   // Class CRUD
-  const handleAddClass = (newClass: Omit<SchoolClass, 'id' | 'halaqahs'>) => {
-    setClasses(prev => [...prev, { ...newClass, id: `c-${Date.now()}`, halaqahs: [] }]);
+  const handleAddClass = async (newClass: Omit<SchoolClass, 'id' | 'halaqah'>) => {
+    setIsMutating(true);
+    const { error } = await supabase.from('kelas').insert({ 
+      name: newClass.name, 
+      short_name: newClass.short_name, 
+      gender: newClass.gender 
+    });
+    if (error) alert(error.message);
+    await fetchData();
+    setIsMutating(false);
   };
   
-  const handleUpdateClass = (updatedClass: SchoolClass) => {
-    setClasses(prev => prev.map(c => c.id === updatedClass.id ? updatedClass : c));
+  const handleUpdateClass = async (updatedClass: SchoolClass) => {
+    setIsMutating(true);
+    const { error } = await supabase.from('kelas').update({ 
+      name: updatedClass.name, 
+      short_name: updatedClass.short_name, 
+      gender: updatedClass.gender 
+    }).eq('id', updatedClass.id);
+    if (error) alert(error.message);
+    await fetchData();
+    setIsMutating(false);
   };
 
-  const handleDeleteClass = (classId: string) => {
+  const handleDeleteClass = async (classId: string) => {
     if(window.confirm('Apakah Anda yakin ingin menghapus kelas ini? Semua data halaqah di dalamnya juga akan terhapus.')){
-        setClasses(prev => prev.filter(c => c.id !== classId));
+        setIsMutating(true);
+        const { error } = await supabase.from('kelas').delete().eq('id', classId);
+        if (error) alert(error.message);
+        await fetchData();
+        setIsMutating(false);
     }
   };
 
   // Halaqah CRUD
-  const handleAddHalaqah = (classId: string, newHalaqah: Omit<Halaqah, 'id' | 'reports'>) => {
-    const newHalaqahWithId: Halaqah = { ...newHalaqah, id: `h-${Date.now()}`, reports: [] };
-    setClasses(prev => prev.map(c => 
-        c.id === classId 
-        ? { ...c, halaqahs: [...c.halaqahs, newHalaqahWithId] } 
-        : c
-    ));
+  const handleAddHalaqah = async (classId: string, newHalaqah: Omit<Halaqah, 'id' | 'laporan'>) => {
+    setIsMutating(true);
+    const { error } = await supabase.from('halaqah').insert({
+        class_id: classId,
+        name: newHalaqah.name,
+        teacher_ids: newHalaqah.teacher_ids,
+        student_count: newHalaqah.student_count
+    });
+    if (error) alert(error.message);
+    await fetchData();
+    setIsMutating(false);
   };
 
-  const handleUpdateHalaqah = (classId: string, updatedHalaqah: Halaqah) => {
-     setClasses(prev => prev.map(c => 
-        c.id === classId 
-        ? { ...c, halaqahs: c.halaqahs.map(h => h.id === updatedHalaqah.id ? updatedHalaqah : h) }
-        : c
-    ));
+  const handleUpdateHalaqah = async (classId: string, updatedHalaqah: Halaqah) => {
+     setIsMutating(true);
+     const { error } = await supabase.from('halaqah').update({
+        name: updatedHalaqah.name,
+        teacher_ids: updatedHalaqah.teacher_ids,
+        student_count: updatedHalaqah.student_count
+     }).eq('id', updatedHalaqah.id);
+     if (error) alert(error.message);
+     await fetchData();
+     setIsMutating(false);
   };
   
-  const handleDeleteHalaqah = (classId: string, halaqahId: string) => {
+  const handleDeleteHalaqah = async (classId: string, halaqahId: string) => {
     if(window.confirm('Apakah Anda yakin ingin menghapus halaqah ini?')){
-      setClasses(prev => prev.map(c => 
-          c.id === classId 
-          ? { ...c, halaqahs: c.halaqahs.filter(h => h.id !== halaqahId) }
-          : c
-      ));
+      setIsMutating(true);
+      const { error } = await supabase.from('halaqah').delete().eq('id', halaqahId);
+      if (error) alert(error.message);
+      await fetchData();
+      setIsMutating(false);
     }
   };
 
   // User/Teacher CRUD
-  const handleAddUser = (newUser: Omit<User, 'id'>) => {
-    setUsers(prev => [...prev, { ...newUser, id: `t-${Date.now()}` }]);
+  const handleAddUser = async (newUser: Omit<User, 'id'>) => {
+    setIsMutating(true);
+    // In a real app, you should use Supabase Auth to create users securely.
+    const { error } = await supabase.from('guru').insert(newUser);
+    if (error) alert(error.message);
+    await fetchData();
+    setIsMutating(false);
   };
 
-  const handleUpdateUser = (updatedUser: User) => {
-    setUsers(prev => prev.map(t => t.id === updatedUser.id ? updatedUser : t));
+  const handleUpdateUser = async (updatedUser: User) => {
+    setIsMutating(true);
+    const { id, ...updateData } = updatedUser;
+    const { error } = await supabase.from('guru').update(updateData).eq('id', id);
+    if (error) alert(error.message);
+    await fetchData();
+    setIsMutating(false);
   };
   
-  const handleDeleteUser = (userId: string) => {
-    const isTeacherAssigned = appData.classes.some(c => 
-        c.halaqahs.some(h => h.teacherIds.includes(userId))
+  const handleDeleteUser = async (userId: string) => {
+    setIsMutating(true);
+    const isTeacherAssigned = classes.some(c => 
+        c.halaqah.some(h => h.teacher_ids.includes(userId))
     );
 
     if (isTeacherAssigned) {
         alert('Tidak dapat menghapus user ini karena masih terdaftar sebagai pengajar di salah satu halaqah.');
+        setIsMutating(false);
         return;
     }
 
     if (window.confirm('Apakah Anda yakin ingin menghapus data user ini?')) {
-        setUsers(prev => prev.filter(t => t.id !== userId));
+        const { error } = await supabase.from('guru').delete().eq('id', userId);
+        if (error) alert(error.message);
+        await fetchData();
     }
+    setIsMutating(false);
   };
 
   // Report CRUD
-  const handleBulkUpdateReports = (reportsToUpdate: Record<string, Report>) => {
-    setClasses(prevClasses => {
-        const newClasses = JSON.parse(JSON.stringify(prevClasses));
+  const handleBulkUpdateReports = async (reportsToUpdate: Record<string, Report>) => {
+    setIsMutating(true);
+    const upsertData = Object.entries(reportsToUpdate).map(([halaqahId, report]) => ({
+      halaqah_id: halaqahId,
+      year: report.year,
+      month: report.month,
+      main_insight: report.main_insight,
+      student_segmentation: report.student_segmentation,
+      identified_challenges: report.identified_challenges,
+      follow_up_recommendations: report.follow_up_recommendations,
+      next_month_target: report.next_month_target,
+      is_read: report.is_read,
+      follow_up_status: report.follow_up_status,
+      teacher_notes: report.teacher_notes,
+    }));
 
-        for (const classItem of newClasses) {
-            for (const halaqah of classItem.halaqahs) {
-                if (reportsToUpdate[halaqah.id]) {
-                    const updatedReport = reportsToUpdate[halaqah.id];
-                    const reportIndex = halaqah.reports.findIndex((r: Report) => r.id === updatedReport.id);
-
-                    if (reportIndex !== -1) {
-                        halaqah.reports[reportIndex] = { ...halaqah.reports[reportIndex], ...updatedReport };
-                    } else {
-                        halaqah.reports.push(updatedReport);
-                    }
-                }
-            }
-        }
-        return newClasses;
+    const { error } = await supabase.from('laporan').upsert(upsertData, {
+        onConflict: 'halaqah_id, year, month',
     });
+    
+    if (error) {
+        alert("Gagal menyimpan laporan: " + error.message);
+    }
+    await fetchData();
+    setIsMutating(false);
 };
 
-const handleUpdateReport = (updatedReport: Report) => {
-    setClasses(prevClasses => {
-        const newClasses = JSON.parse(JSON.stringify(prevClasses));
-        let found = false;
-        for (const classItem of newClasses) {
-            for (const halaqah of classItem.halaqahs) {
-                const reportIndex = halaqah.reports.findIndex((r: Report) => r.id === updatedReport.id);
-                if (reportIndex !== -1) {
-                    const originalHalaqahReport = halaqah.reports[reportIndex];
-                    const fullUpdatedReport = { ...originalHalaqahReport, ...updatedReport };
-                    halaqah.reports[reportIndex] = fullUpdatedReport;
+const handleUpdateReport = async (updatedReport: Report) => {
+    setIsMutating(true);
+    const { id, ...reportData } = updatedReport;
+    const dbReport = {
+        // FIX: Use `id` from destructuring, not from `reportData`.
+        id: id,
+        halaqah_id: reportData.halaqah_id,
+        month: reportData.month,
+        year: reportData.year,
+        main_insight: reportData.main_insight,
+        student_segmentation: reportData.student_segmentation,
+        identified_challenges: reportData.identified_challenges,
+        follow_up_recommendations: reportData.follow_up_recommendations,
+        next_month_target: reportData.next_month_target,
+        is_read: reportData.is_read,
+        follow_up_status: reportData.follow_up_status,
+        teacher_notes: reportData.teacher_notes,
+    };
 
-                    found = true;
-                    break;
-                }
-            }
-            if(found) break;
-        }
-        return newClasses;
+    const { error } = await supabase.from('laporan').upsert(dbReport, {
+        onConflict: 'halaqah_id, year, month',
     });
+
+    if (error) {
+        alert("Gagal memperbarui laporan: " + error.message);
+    }
+    await fetchData();
+    setIsMutating(false);
 };
 
 
   const filteredClasses = useMemo(() => {
     if (!currentUser || currentUser.role === 'Koordinator') {
-        return appData.classes;
+        return classes;
     }
     // Filter for 'Guru'
-    return appData.classes.map(c => ({
+    return classes.map(c => ({
         ...c,
-        halaqahs: c.halaqahs.filter(h => h.teacherIds.includes(currentUser.id))
-    })).filter(c => c.halaqahs.length > 0);
-  }, [appData.classes, currentUser]);
+        halaqah: c.halaqah.filter(h => h.teacher_ids.includes(currentUser.id))
+    })).filter(c => c.halaqah.length > 0);
+  }, [classes, currentUser]);
 
+
+  if (isLoading && !currentUser) { // Show loader on initial load before login
+    return <Loader />;
+  }
 
   if (!currentUser) {
-    return <Login users={appData.users} onLogin={handleLogin} />;
+    return <Login onLogin={handleLogin} />;
   }
   
   const renderContent = () => {
+    if (isLoading) return <Loader />;
+
     switch(activeView) {
       case 'Dashboard Guru':
         return <TeacherDashboard 
                   currentUser={currentUser}
                   classes={filteredClasses}
-                  teachers={appData.users}
-                  onUpdateReportStatus={handleUpdateReport}
+                  teachers={users}
+                  onUpdateReport={handleUpdateReport}
                 />;
       case 'Manajemen Guru':
         return <TeacherManagement
-                teachers={appData.users}
-                classes={appData.classes}
+                teachers={users}
+                classes={classes}
                 onAddTeacher={handleAddUser}
                 onUpdateTeacher={handleUpdateUser}
                 onDeleteTeacher={handleDeleteUser}
             />;
       case 'Manajemen Kelas':
         return <ClassManagement 
-                classes={appData.classes} 
+                classes={classes} 
                 onAddClass={handleAddClass}
                 onUpdateClass={handleUpdateClass}
                 onDeleteClass={handleDeleteClass}
             />;
       case 'Manajemen Halaqah':
         return <HalaqahManagement
-                classes={appData.classes}
-                teachers={appData.users}
+                classes={classes}
+                teachers={users}
                 onAddHalaqah={handleAddHalaqah}
                 onUpdateHalaqah={handleUpdateHalaqah}
                 onDeleteHalaqah={handleDeleteHalaqah}
@@ -252,7 +341,7 @@ const handleUpdateReport = (updatedReport: Report) => {
       case 'Resume Laporan':
         return <ResumeLaporan 
             classes={filteredClasses} 
-            teachers={appData.users} 
+            teachers={users} 
             currentUser={currentUser}
             onUpdateReport={handleUpdateReport}
         />;
@@ -260,7 +349,7 @@ const handleUpdateReport = (updatedReport: Report) => {
       default:
         return <MonitoringDashboard 
                     classes={filteredClasses} 
-                    teachers={appData.users}
+                    teachers={users}
                     currentUser={currentUser}
                     onUpdateReport={handleUpdateReport}
                 />;
@@ -269,6 +358,7 @@ const handleUpdateReport = (updatedReport: Report) => {
 
   return (
     <div className="flex h-screen bg-gray-50">
+      {isMutating && <Loader />}
       <Sidebar 
         activeView={activeView} 
         setActiveView={setActiveView}

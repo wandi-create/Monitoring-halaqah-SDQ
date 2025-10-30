@@ -1,10 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { SchoolClass, User, Report, FollowUpStatus, ReportSection } from '../types';
+import { SchoolClass, User, Report, FollowUpStatus } from '../types';
 import { MONTHS } from '../constants';
 import { 
   CheckCircleIcon, 
   ClockIcon,
-  DocumentTextIcon,
   DocumentMagnifyingGlassIcon,
 } from './Icons';
 import ReportDetailModal from './ReportDetailModal';
@@ -19,7 +18,7 @@ interface ResumeLaporanProps {
   classes: SchoolClass[];
   teachers: User[];
   currentUser: User;
-  onUpdateReport: (report: Report) => void;
+  onUpdateReport: (report: Report) => Promise<void>;
 }
 
 const StatusPill: React.FC<{ isDone: boolean; textDone: string; textNotDone: string }> = ({ isDone, textDone, textNotDone }) => (
@@ -38,7 +37,6 @@ const FollowUpStatusPill: React.FC<{ status: FollowUpStatus }> = ({ status }) =>
   };
   return (
     <div className={`flex items-center text-xs font-medium px-2.5 py-1 rounded-full ${statusStyles[status]}`}>
-      <span className="w-2 h-2 mr-2 rounded-full" style={{ backgroundColor: statusStyles[status].split(' ')[1].replace('text-', 'bg-').split('-')[0] + '-500' }}></span>
       <span>{status}</span>
     </div>
   );
@@ -53,7 +51,7 @@ const ResumeLaporan: React.FC<ResumeLaporanProps> = ({ classes, teachers, curren
   
   const years = useMemo(() => {
     const allYears = new Set<number>();
-    classes.forEach(c => c.halaqahs.forEach(h => h.reports.forEach(r => allYears.add(r.year))));
+    classes.forEach(c => c.halaqah.forEach(h => h.laporan?.forEach(r => allYears.add(r.year))));
     if (!allYears.has(currentYear)) {
       allYears.add(currentYear);
     }
@@ -63,20 +61,18 @@ const ResumeLaporan: React.FC<ResumeLaporanProps> = ({ classes, teachers, curren
 
   const filteredReports = useMemo((): ExtendedReport[] => {
     return classes.flatMap(schoolClass =>
-      schoolClass.halaqahs.flatMap(halaqah =>
-        halaqah.reports.map(report => ({
+      schoolClass.halaqah.flatMap(halaqah =>
+        (halaqah.laporan || []).map(report => ({
           ...report,
           halaqahName: halaqah.name,
           className: schoolClass.name,
-          teacherNames: halaqah.teacherIds.map(id => teachers.find(t => t.id === id)?.name || 'N/A')
+          teacherNames: halaqah.teacher_ids.map(id => teachers.find(t => t.id === id)?.name || 'N/A')
         }))
       )
     )
     .filter(report => 
       (selectedMonth === 'all' || report.month === parseInt(selectedMonth)) &&
-      (selectedYear === 'all' || report.year === parseInt(selectedYear)) &&
-      // Filter for reports that use the new dynamic section format.
-      Array.isArray(report.mainInsight)
+      (selectedYear === 'all' || report.year === parseInt(selectedYear))
     )
     .sort((a, b) => new Date(b.year, b.month - 1).getTime() - new Date(a.year, a.month - 1).getTime());
   }, [classes, teachers, selectedMonth, selectedYear]);
@@ -115,7 +111,7 @@ const ResumeLaporan: React.FC<ResumeLaporanProps> = ({ classes, teachers, curren
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {filteredReports.length > 0 ? (
           filteredReports.map(report => {
-            const mainInsightContent = report.mainInsight.length > 0 ? report.mainInsight[0].content : '';
+            const mainInsightContent = (report.main_insight || []).length > 0 ? report.main_insight[0].content : '';
             return (
               <div 
                 key={`${report.id}-${report.halaqahName}`} 
@@ -138,8 +134,8 @@ const ResumeLaporan: React.FC<ResumeLaporanProps> = ({ classes, teachers, curren
                   </div>
                   
                   <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-100">
-                     <StatusPill isDone={report.isRead} textDone="Sudah Dibaca" textNotDone="Belum Dibaca"/>
-                     <FollowUpStatusPill status={report.followUpStatus} />
+                     <StatusPill isDone={report.is_read} textDone="Sudah Dibaca" textNotDone="Belum Dibaca"/>
+                     <FollowUpStatusPill status={report.follow_up_status} />
                   </div>
               </div>
             )
@@ -157,10 +153,9 @@ const ResumeLaporan: React.FC<ResumeLaporanProps> = ({ classes, teachers, curren
         <ReportDetailModal
             report={selectedReport}
             onClose={() => setSelectedReport(null)}
-            onSave={(updatedReport) => {
-              onUpdateReport(updatedReport);
-              // Optimistically update the selected report to reflect changes immediately
-              setSelectedReport(prev => prev ? { ...prev, ...updatedReport } : null);
+            onSave={async (updatedReport) => {
+              await onUpdateReport(updatedReport);
+              setSelectedReport(null);
             }}
             currentUser={currentUser}
         />

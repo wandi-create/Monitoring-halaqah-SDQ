@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { SchoolClass, Halaqah, Report, ReportSection } from '../types';
 import { CheckCircleIcon, SaveIcon, PlusIcon, TrashIcon } from './Icons';
@@ -10,14 +11,16 @@ interface ReportCardProps {
   months: string[];
 }
 
-const BLANK_REPORT_FIELDS: Omit<Report, 'id' | 'month' | 'year' | 'isRead' | 'followUpStatus' | 'teacherNotes'> = {
-  mainInsight: [],
-  studentSegmentation: [],
-  identifiedChallenges: [],
-  followUpRecommendations: [],
-  nextMonthTarget: [],
+// FIX: Use snake_case to match the Report type.
+const BLANK_REPORT_FIELDS: Omit<Report, 'id' | 'halaqah_id' | 'month' | 'year' | 'is_read' | 'follow_up_status' | 'teacher_notes'> = {
+  main_insight: [],
+  student_segmentation: [],
+  identified_challenges: [],
+  follow_up_recommendations: [],
+  next_month_target: [],
 };
 
+// FIX: Use snake_case for ReportField type.
 type ReportField = keyof typeof BLANK_REPORT_FIELDS;
 
 const normalizeReportField = (fieldData: any, defaultTitle: string): ReportSection[] => {
@@ -39,28 +42,32 @@ const ReportCard: React.FC<ReportCardProps> = ({ schoolClass, halaqah, onSaveRep
   const [showSuccess, setShowSuccess] = useState(false);
 
   const getReportForDate = useCallback((year: number, month: number): Report => {
-    const reportId = `${year}-${String(month).padStart(2, '0')}`;
-    const existingReport = halaqah.reports.find(r => r.id === reportId);
+    // FIX: Find report by year and month, as ID is a UUID.
+    const existingReport = halaqah.reports.find(r => r.year === year && r.month === month);
     
     const reportValues = { ...BLANK_REPORT_FIELDS };
     if (existingReport) {
-      reportValues.mainInsight = normalizeReportField(existingReport.mainInsight, 'Insight Utama');
-      reportValues.studentSegmentation = normalizeReportField(existingReport.studentSegmentation, 'Segmentasi Murid');
-      reportValues.identifiedChallenges = normalizeReportField(existingReport.identifiedChallenges, 'Tantangan');
-      reportValues.followUpRecommendations = normalizeReportField(existingReport.followUpRecommendations, 'Rekomendasi');
-      reportValues.nextMonthTarget = normalizeReportField(existingReport.nextMonthTarget, 'Target');
+      // FIX: Use snake_case properties
+      reportValues.main_insight = normalizeReportField(existingReport.main_insight, 'Insight Utama');
+      reportValues.student_segmentation = normalizeReportField(existingReport.student_segmentation, 'Segmentasi Murid');
+      reportValues.identified_challenges = normalizeReportField(existingReport.identified_challenges, 'Tantangan');
+      reportValues.follow_up_recommendations = normalizeReportField(existingReport.follow_up_recommendations, 'Rekomendasi');
+      reportValues.next_month_target = normalizeReportField(existingReport.next_month_target, 'Target');
     }
 
     return { 
         ...reportValues, 
-        id: reportId, 
+        // FIX: Use existing report ID or an empty string for new reports.
+        id: existingReport?.id || '', 
+        halaqah_id: halaqah.id,
         year, 
         month,
-        isRead: existingReport?.isRead || false,
-        followUpStatus: existingReport?.followUpStatus || 'Belum Dimulai',
-        teacherNotes: existingReport?.teacherNotes || '',
+        // FIX: Use snake_case properties
+        is_read: existingReport?.is_read || false,
+        follow_up_status: existingReport?.follow_up_status || 'Belum Dimulai',
+        teacher_notes: existingReport?.teacher_notes || '',
     };
-  }, [halaqah.reports]);
+  }, [halaqah.reports, halaqah.id]);
 
   useEffect(() => {
     setCurrentReport(getReportForDate(selectedYear, selectedMonth));
@@ -137,12 +144,13 @@ const ReportCard: React.FC<ReportCardProps> = ({ schoolClass, halaqah, onSaveRep
     }
   };
   
+  // FIX: Use snake_case keys
   const reportFields: { key: ReportField, label: string, placeholder: string }[] = [
-    { key: 'mainInsight', label: 'Insight Utama', placeholder: 'Tuliskan poin-poin insight di sini...' },
-    { key: 'studentSegmentation', label: 'Segmentasi Murid', placeholder: 'Jelaskan poin-poin segmentasi murid...' },
-    { key: 'identifiedChallenges', label: 'Tantangan yang Teridentifikasi', placeholder: 'Jelaskan poin-poin tantangan...' },
-    { key: 'followUpRecommendations', label: 'Rekomendasi Tindak Lanjut', placeholder: 'Jelaskan poin-poin rekomendasi...' },
-    { key: 'nextMonthTarget', label: 'Target Bulan Depan', placeholder: 'Jelaskan poin-poin target...' },
+    { key: 'main_insight', label: 'Insight Utama', placeholder: 'Tuliskan poin-poin insight di sini...' },
+    { key: 'student_segmentation', label: 'Segmentasi Murid', placeholder: 'Jelaskan poin-poin segmentasi murid...' },
+    { key: 'identified_challenges', label: 'Tantangan yang Teridentifikasi', placeholder: 'Jelaskan poin-poin tantangan...' },
+    { key: 'follow_up_recommendations', label: 'Rekomendasi Tindak Lanjut', placeholder: 'Jelaskan poin-poin rekomendasi...' },
+    { key: 'next_month_target', label: 'Target Bulan Depan', placeholder: 'Jelaskan poin-poin target...' },
   ];
 
   if (!currentReport) {
@@ -223,8 +231,10 @@ const ReportCard: React.FC<ReportCardProps> = ({ schoolClass, halaqah, onSaveRep
                 <input
                   id="isRead"
                   type="checkbox"
-                  checked={currentReport.isRead}
-                  onChange={(e) => setCurrentReport(prev => prev ? { ...prev, isRead: e.target.checked } : null)}
+                  // FIX: Use snake_case property
+                  checked={currentReport.is_read}
+                  // FIX: Use snake_case property
+                  onChange={(e) => setCurrentReport(prev => prev ? { ...prev, is_read: e.target.checked } : null)}
                   className="h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                 />
                 <label htmlFor="isRead" className="ml-3 block text-sm font-medium text-slate-700">

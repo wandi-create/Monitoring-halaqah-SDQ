@@ -5,21 +5,21 @@ import { SaveIcon, PlusIcon, TrashIcon } from './Icons';
 
 interface BulkInputProps {
   classes: SchoolClass[];
-  onBulkUpdate: (reportsToUpdate: Record<string, Report>) => void;
+  onBulkUpdate: (reportsToUpdate: Record<string, Report>) => Promise<void>;
 }
 
-const BLANK_REPORT_FIELDS: Omit<Report, 'id' | 'month' | 'year' | 'isRead' | 'followUpStatus' | 'teacherNotes'> = {
-  mainInsight: [],
-  studentSegmentation: [],
-  identifiedChallenges: [],
-  followUpRecommendations: [],
-  nextMonthTarget: [],
+const BLANK_REPORT_FIELDS: Omit<Report, 'id' | 'halaqah_id' | 'month' | 'year' | 'is_read' | 'follow_up_status' | 'teacher_notes'> = {
+  main_insight: [],
+  student_segmentation: [],
+  identified_challenges: [],
+  follow_up_recommendations: [],
+  next_month_target: [],
 };
 
 type ReportField = keyof typeof BLANK_REPORT_FIELDS;
 
 const normalizeReportField = (fieldData: any, defaultTitle: string): ReportSection[] => {
-  if (Array.isArray(fieldData)) {
+  if (Array.isArray(fieldData) && fieldData.every(item => typeof item === 'object' && item !== null && 'id' in item)) {
     return fieldData;
   }
   if (typeof fieldData === 'string' && fieldData.trim() !== '') {
@@ -37,34 +37,33 @@ const BulkInput: React.FC<BulkInputProps> = ({ classes, onBulkUpdate }) => {
   const [showSuccess, setShowSuccess] = useState(false);
 
   const allHalaqahs = useMemo(() => 
-    classes.flatMap(c => c.halaqahs.map(h => ({ ...h, className: c.name, classId: c.id })))
+    classes.flatMap(c => c.halaqah.map(h => ({ ...h, className: c.name, classId: c.id })))
   , [classes]);
 
   useEffect(() => {
-    const reportIdPrefix = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}`;
     const initialData: Record<string, Report> = {};
     
     allHalaqahs.forEach(halaqah => {
-      const reportId = reportIdPrefix;
-      const existingReport = halaqah.reports.find(r => r.id === reportId);
+      const existingReport = halaqah.laporan?.find(r => r.year === selectedYear && r.month === selectedMonth);
       
       const reportValues = { ...BLANK_REPORT_FIELDS };
       if(existingReport) {
-        reportValues.mainInsight = normalizeReportField(existingReport.mainInsight, 'Insight Utama');
-        reportValues.studentSegmentation = normalizeReportField(existingReport.studentSegmentation, 'Segmentasi Murid');
-        reportValues.identifiedChallenges = normalizeReportField(existingReport.identifiedChallenges, 'Tantangan');
-        reportValues.followUpRecommendations = normalizeReportField(existingReport.followUpRecommendations, 'Rekomendasi');
-        reportValues.nextMonthTarget = normalizeReportField(existingReport.nextMonthTarget, 'Target');
+        reportValues.main_insight = normalizeReportField(existingReport.main_insight, 'Insight Utama');
+        reportValues.student_segmentation = normalizeReportField(existingReport.student_segmentation, 'Segmentasi Murid');
+        reportValues.identified_challenges = normalizeReportField(existingReport.identified_challenges, 'Tantangan');
+        reportValues.follow_up_recommendations = normalizeReportField(existingReport.follow_up_recommendations, 'Rekomendasi');
+        reportValues.next_month_target = normalizeReportField(existingReport.next_month_target, 'Target');
       }
 
       initialData[halaqah.id] = {
-        ...reportValues,
-        id: reportId,
+        id: existingReport?.id || '',
+        halaqah_id: halaqah.id,
         year: selectedYear,
         month: selectedMonth,
-        isRead: existingReport?.isRead || false,
-        followUpStatus: existingReport?.followUpStatus || 'Belum Dimulai',
-        teacherNotes: existingReport?.teacherNotes || '',
+        ...reportValues,
+        is_read: existingReport?.is_read || false,
+        follow_up_status: existingReport?.follow_up_status || 'Belum Dimulai',
+        teacher_notes: existingReport?.teacher_notes || '',
       };
     });
 
@@ -148,19 +147,19 @@ const BulkInput: React.FC<BulkInputProps> = ({ classes, onBulkUpdate }) => {
     }
   };
 
-  const handleSaveAll = () => {
-    onBulkUpdate(reportsData);
+  const handleSaveAll = async () => {
+    await onBulkUpdate(reportsData);
     setIsModified(false);
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 3000);
   };
   
   const reportFields: { key: ReportField, label: string, placeholder: string }[] = [
-    { key: 'mainInsight', label: 'Insight Utama', placeholder: 'Tuliskan poin-poin insight di sini...' },
-    { key: 'studentSegmentation', label: 'Segmentasi Murid', placeholder: 'Jelaskan poin-poin segmentasi murid...' },
-    { key: 'identifiedChallenges', label: 'Tantangan yang Teridentifikasi', placeholder: 'Jelaskan poin-poin tantangan...' },
-    { key: 'followUpRecommendations', label: 'Rekomendasi Tindak Lanjut', placeholder: 'Jelaskan poin-poin rekomendasi...' },
-    { key: 'nextMonthTarget', label: 'Target Bulan Depan', placeholder: 'Jelaskan poin-poin target...' },
+    { key: 'main_insight', label: 'Insight Utama', placeholder: 'Tuliskan poin-poin insight di sini...' },
+    { key: 'student_segmentation', label: 'Segmentasi Murid', placeholder: 'Jelaskan poin-poin segmentasi murid...' },
+    { key: 'identified_challenges', label: 'Tantangan yang Teridentifikasi', placeholder: 'Jelaskan poin-poin tantangan...' },
+    { key: 'follow_up_recommendations', label: 'Rekomendasi Tindak Lanjut', placeholder: 'Jelaskan poin-poin rekomendasi...' },
+    { key: 'next_month_target', label: 'Target Bulan Depan', placeholder: 'Jelaskan poin-poin target...' },
   ];
 
 
