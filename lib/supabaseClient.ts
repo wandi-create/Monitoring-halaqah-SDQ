@@ -4,8 +4,8 @@ import { createClient } from '@supabase/supabase-js';
 // == PENTING: Ganti nilai di bawah ini dengan URL dan Kunci Anon Supabase proyek Anda. ==
 // == Nilai saat ini adalah placeholder dan TIDAK akan berfungsi.                       ==
 // =======================================================================================
-const supabaseUrl = "https://gantidenganprojectidyousupabase.supabase.co";
-const supabaseAnonKey = "gantidengansupabaseanonkeyanda";
+const supabaseUrl = "https://lzwkaquwomvaoprruouk.supabase.co";
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6d2thcXV3b212YW9wcnJ1b3VrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE3MTc5MzMsImV4cCI6MjA3NzI5MzkzM30.p8CsE8mEI_fQ1wGEpauCrWD7nPouOKIeGljtCQCmwQM";
 // =======================================================================================
 
 
