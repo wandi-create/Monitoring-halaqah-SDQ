@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from './lib/supabaseClient';
 import { SchoolClass, Halaqah, Report, User } from './types';
@@ -10,7 +9,6 @@ import HalaqahManagement from './components/HalaqahManagement';
 import BulkInput from './components/BulkInput';
 import ResumeLaporan from './components/ResumeLaporan';
 import TeacherManagement from './components/TeacherManagement';
-import Login from './components/Login';
 import TeacherDashboard from './components/TeacherDashboard';
 import { MenuIcon } from './components/Icons';
 import Loader from './components/Loader';
@@ -23,13 +21,11 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isMutating, setIsMutating] = useState(false);
 
-  const [currentUser, setCurrentUser] = useState<User | null>(() => {
-    try {
-      const savedUser = sessionStorage.getItem('currentUser');
-      return savedUser ? JSON.parse(savedUser) : null;
-    } catch {
-      return null;
-    }
+  const [currentUser, setCurrentUser] = useState<User | null>({
+    id: 'a1b2c3d4-e5f6-7890-1234-567890abcdef', // Dummy UUID
+    name: 'Koordinator Demo',
+    email: 'koordinator.demo@example.com',
+    role: 'Koordinator'
   });
 
   const [activeView, setActiveView] = useState<View>('Monitoring');
@@ -100,11 +96,6 @@ const App: React.FC = () => {
       sessionStorage.removeItem('currentUser');
     }
   }, [currentUser]);
-
-  const handleLogin = (user: User) => {
-    setCurrentUser(user);
-    setActiveView(user.role === 'Guru' ? 'Dashboard Guru' : 'Monitoring');
-  };
 
   const handleLogout = () => {
     setCurrentUser(null);
@@ -291,12 +282,15 @@ const handleUpdateReport = async (updatedReport: Report) => {
   }, [classes, currentUser]);
 
 
-  if (isLoading && !currentUser) { // Show loader on initial load before login
-    return <Loader />;
-  }
-
   if (!currentUser) {
-    return <Login onLogin={handleLogin} />;
+    return (
+        <div className="flex items-center justify-center min-h-screen bg-gray-100">
+            <div className="text-center p-8 bg-white rounded-lg shadow-md">
+                <h1 className="text-2xl font-bold text-gray-800">Anda telah logout.</h1>
+                <p className="text-gray-600 mt-2">Silakan refresh halaman untuk kembali ke mode demo.</p>
+            </div>
+        </div>
+    );
   }
   
   const renderContent = () => {
