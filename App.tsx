@@ -10,6 +10,7 @@ import BulkInput from './components/BulkInput';
 import ResumeLaporan from './components/ResumeLaporan';
 import TeacherManagement from './components/TeacherManagement';
 import TeacherDashboard from './components/TeacherDashboard';
+import Login from './components/Login';
 import { MenuIcon } from './components/Icons';
 import Loader from './components/Loader';
 
@@ -21,11 +22,14 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isMutating, setIsMutating] = useState(false);
 
-  const [currentUser, setCurrentUser] = useState<User | null>({
-    id: 'a1b2c3d4-e5f6-7890-1234-567890abcdef', // Dummy UUID
-    name: 'Koordinator Demo',
-    email: 'koordinator.demo@example.com',
-    role: 'Koordinator'
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    try {
+        const storedUser = sessionStorage.getItem('currentUser');
+        return storedUser ? JSON.parse(storedUser) : null;
+    } catch (error) {
+        console.error("Gagal memuat user dari session storage", error);
+        return null;
+    }
   });
 
   const [activeView, setActiveView] = useState<View>('Monitoring');
@@ -45,27 +49,12 @@ const App: React.FC = () => {
         
       if (classesError) throw classesError;
       
-      // Map snake_case from DB to camelCase in JS objects
       const formattedClasses = classesData.map(c => ({
           ...c,
-          shortName: c.short_name,
-          halaqahs: c.halaqah.map(h => ({
+          halaqah: (c.halaqah || []).map(h => ({
               ...h,
-              teacherIds: h.teacher_ids,
-              studentCount: h.student_count,
-              classId: h.class_id,
-              reports: h.laporan.map(r => ({
-                  ...r,
-                  halaqahId: r.halaqah_id,
-                  mainInsight: r.main_insight,
-                  studentSegmentation: r.student_segmentation,
-                  identifiedChallenges: r.identified_challenges,
-                  followUpRecommendations: r.follow_up_recommendations,
-                  nextMonthTarget: r.next_month_target,
-                  isRead: r.is_read,
-                  followUpStatus: r.follow_up_status,
-                  teacherNotes: r.teacher_notes
-              }))
+              teacher_ids: Array.isArray(h.teacher_ids) ? h.teacher_ids : [],
+              laporan: h.laporan || []
           }))
       }));
       
@@ -96,6 +85,10 @@ const App: React.FC = () => {
       sessionStorage.removeItem('currentUser');
     }
   }, [currentUser]);
+
+  const handleLogin = (user: User) => {
+    setCurrentUser(user);
+  };
 
   const handleLogout = () => {
     setCurrentUser(null);
@@ -243,7 +236,6 @@ const handleUpdateReport = async (updatedReport: Report) => {
     setIsMutating(true);
     const { id, ...reportData } = updatedReport;
     const dbReport = {
-        // FIX: Use `id` from destructuring, not from `reportData`.
         id: id,
         halaqah_id: reportData.halaqah_id,
         month: reportData.month,
@@ -283,14 +275,7 @@ const handleUpdateReport = async (updatedReport: Report) => {
 
 
   if (!currentUser) {
-    return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100">
-            <div className="text-center p-8 bg-white rounded-lg shadow-md">
-                <h1 className="text-2xl font-bold text-gray-800">Anda telah logout.</h1>
-                <p className="text-gray-600 mt-2">Silakan refresh halaman untuk kembali ke mode demo.</p>
-            </div>
-        </div>
-    );
+    return <Login onLogin={handleLogin} />;
   }
   
   const renderContent = () => {

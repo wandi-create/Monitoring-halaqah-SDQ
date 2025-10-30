@@ -107,7 +107,7 @@ const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ report, onClose, 
     const reportCategories: { label: string; sections: ReportSection[] }[] = [
         { label: 'Insight Utama', sections: normalizeReportField(report.main_insight, 'Insight Utama') },
         { label: 'Segmentasi Murid', sections: normalizeReportField(report.student_segmentation, 'Segmentasi Murid') },
-        { label: 'Tantangan yang Teridentifikasi', sections: normalizeReportField(report.identified_challenges, 'Tantangan') },
+        { label: 'Tantangan Terindikasi', sections: normalizeReportField(report.identified_challenges, 'Tantangan') },
         { label: 'Rekomendasi Tindak Lanjut', sections: normalizeReportField(report.follow_up_recommendations, 'Rekomendasi') },
         { label: 'Target Bulan Depan', sections: normalizeReportField(report.next_month_target, 'Target') },
     ];

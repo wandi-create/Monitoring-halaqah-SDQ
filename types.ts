@@ -35,7 +35,7 @@ export interface Halaqah {
   teacher_ids: string[]; // array of user ids (uuids)
   student_count: number;
   class_id: string; // Foreign key to SchoolClass
-  laporan?: Report[]; // Renamed from 'reports' to match Supabase table name
+  laporan: Report[]; // Renamed from 'reports' to match Supabase table name
 }
 
 export interface SchoolClass {

@@ -43,7 +43,8 @@ const ReportCard: React.FC<ReportCardProps> = ({ schoolClass, halaqah, onSaveRep
 
   const getReportForDate = useCallback((year: number, month: number): Report => {
     // FIX: Find report by year and month, as ID is a UUID.
-    const existingReport = halaqah.reports.find(r => r.year === year && r.month === month);
+    // FIX: Property 'reports' does not exist on type 'Halaqah'. Use 'laporan' instead.
+    const existingReport = halaqah.laporan.find(r => r.year === year && r.month === month);
     
     const reportValues = { ...BLANK_REPORT_FIELDS };
     if (existingReport) {
@@ -67,7 +68,8 @@ const ReportCard: React.FC<ReportCardProps> = ({ schoolClass, halaqah, onSaveRep
         follow_up_status: existingReport?.follow_up_status || 'Belum Dimulai',
         teacher_notes: existingReport?.teacher_notes || '',
     };
-  }, [halaqah.reports, halaqah.id]);
+    // FIX: Property 'reports' does not exist on type 'Halaqah'. Use 'laporan' instead.
+  }, [halaqah.laporan, halaqah.id]);
 
   useEffect(() => {
     setCurrentReport(getReportForDate(selectedYear, selectedMonth));
@@ -148,7 +150,7 @@ const ReportCard: React.FC<ReportCardProps> = ({ schoolClass, halaqah, onSaveRep
   const reportFields: { key: ReportField, label: string, placeholder: string }[] = [
     { key: 'main_insight', label: 'Insight Utama', placeholder: 'Tuliskan poin-poin insight di sini...' },
     { key: 'student_segmentation', label: 'Segmentasi Murid', placeholder: 'Jelaskan poin-poin segmentasi murid...' },
-    { key: 'identified_challenges', label: 'Tantangan yang Teridentifikasi', placeholder: 'Jelaskan poin-poin tantangan...' },
+    { key: 'identified_challenges', label: 'Tantangan Terindikasi', placeholder: 'Jelaskan poin-poin tantangan...' },
     { key: 'follow_up_recommendations', label: 'Rekomendasi Tindak Lanjut', placeholder: 'Jelaskan poin-poin rekomendasi...' },
     { key: 'next_month_target', label: 'Target Bulan Depan', placeholder: 'Jelaskan poin-poin target...' },
   ];

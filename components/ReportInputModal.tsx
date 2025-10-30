@@ -148,7 +148,7 @@ const ReportInputModal: React.FC<ReportInputModalProps> = ({ isOpen, onClose, on
   const reportFields: { key: ReportField; label: string; placeholder: string }[] = [
     { key: 'main_insight', label: 'Insight Utama', placeholder: 'Tuliskan poin-poin insight di sini...' },
     { key: 'student_segmentation', label: 'Segmentasi Murid', placeholder: 'Jelaskan poin-poin segmentasi murid...' },
-    { key: 'identified_challenges', label: 'Tantangan yang Teridentifikasi', placeholder: 'Jelaskan poin-poin tantangan...' },
+    { key: 'identified_challenges', label: 'Tantangan Terindikasi', placeholder: 'Jelaskan poin-poin tantangan...' },
     { key: 'follow_up_recommendations', label: 'Rekomendasi Tindak Lanjut', placeholder: 'Jelaskan poin-poin rekomendasi...' },
     { key: 'next_month_target', label: 'Target Bulan Depan', placeholder: 'Jelaskan poin-poin target...' },
   ];
