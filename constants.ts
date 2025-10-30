@@ -8,7 +8,7 @@ export const INITIAL_USERS: User[] = [
   { id: 't4', name: "Ustadz Muhammad Iqbal Ramdani", email: "iqbal@sdq.com", password: "password123", role: "Guru" },
   { id: 't5', name: "Ustadz Raden Syaripin", email: "syaripin@sdq.com", password: "password123", role: "Guru" },
   { id: 't6', name: "Ustadz Erric Suryono", email: "erric@sdq.com", password: "password123", role: "Guru" },
-  { id: 't7', name: "Ustadz Fulan A", email: "fulan.a@sdq.com", password: "password123", role: "Guru" },
+  { id: 't7', name: "Ustadz Muhammad Syarfi", email: "syarfi@sdq.com", password: "password123", role: "Guru" },
   { id: 't8', name: "Ustadzah Fulanah B", email: "fulanah.b@sdq.com", password: "password123", role: "Guru" },
 ];
 
