@@ -53,7 +53,10 @@ const App: React.FC = () => {
           ...c,
           halaqah: (c.halaqah || []).map(h => ({
               ...h,
-              teacher_id: h.teacher_ids || null, // Supabase column is teacher_ids but holds a single value
+              // Map the 'teacher_ids' column from Supabase (which holds a single ID)
+              // to the 'teacher_id' property expected by the frontend.
+              // Convert to string and handle null/undefined values.
+              teacher_id: String(h.teacher_ids || ''),
               laporan: h.laporan || []
           }))
       }));
