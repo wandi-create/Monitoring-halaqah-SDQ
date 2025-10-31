@@ -27,7 +27,7 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ classes, teac
   const displayedClasses = activeTab === 'Ikhwan' ? ikhwanClasses : akhwatClasses;
   
   const getTeacherName = (teacherId: string): string => {
-      return teachers.find(t => t.id === teacherId)?.name || 'N/A';
+      return teachers.find(t => String(t.id) === String(teacherId))?.name || 'N/A';
   }
 
   const handleViewReport = (report: Report, halaqah: Halaqah, schoolClass: SchoolClass) => {

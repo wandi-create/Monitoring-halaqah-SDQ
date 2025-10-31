@@ -67,7 +67,7 @@ const ResumeLaporan: React.FC<ResumeLaporanProps> = ({ classes, teachers, curren
           ...report,
           halaqahName: halaqah.name,
           className: schoolClass.name,
-          teacherName: teachers.find(t => t.id === halaqah.teacher_id)?.name || 'N/A'
+          teacherName: teachers.find(t => String(t.id) === String(halaqah.teacher_id))?.name || 'N/A'
         }))
       )
     )

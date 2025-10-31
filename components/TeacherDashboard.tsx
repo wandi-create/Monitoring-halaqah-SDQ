@@ -61,7 +61,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ currentUser, classe
             ...report,
             halaqahName: halaqah.name,
             className: halaqah.className,
-            teacherName: teachers.find(t => t.id === halaqah.teacher_id)?.name || 'N/A'
+            teacherName: teachers.find(t => String(t.id) === String(halaqah.teacher_id))?.name || 'N/A'
         });
     }
 
@@ -83,7 +83,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ currentUser, classe
                 aria-hidden="true"
                 className="absolute inset-0 -z-10"
                 style={{
-                    backgroundImage: `url('data:image/svg+xml;utf8,<svg width="28" height="28" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg"><g fill="%234a2e72" fill-opacity="0.05" fill-rule="evenodd"><path d="M14 0l1.4 1.4-1.4 1.4-1.4-1.4L14 0zm0 28l1.4-1.4-1.4-1.4-1.4 1.4L14 28zm14-14l-1.4 1.4-1.4-1.4L28 14zm-28 0l1.4 1.4-1.4 1.4L0 14zM7 7l1.4 1.4-1.4 1.4-1.4-1.4L7 7zm14 0l1.4 1.4-1.4 1.4-1.4-1.4L21 7zm0 14l1.4 1.4-1.4 1.4-1.4-1.4L21 21zm-14 0l1.4 1.4-1.4 1.4-1.4-1.4L7 21z"/></g></svg>')`,
+                    backgroundImage: `url('data:image/svg+xml;utf8,<svg width="28" height="28" viewBox="0 0 28" viewBox="0 0 28" xmlns="http://www.w3.org/2000/svg"><g fill="%234a2e72" fill-opacity="0.05" fill-rule="evenodd"><path d="M14 0l1.4 1.4-1.4 1.4-1.4-1.4L14 0zm0 28l1.4-1.4-1.4-1.4-1.4 1.4L14 28zm14-14l-1.4 1.4-1.4-1.4L28 14zm-28 0l1.4 1.4-1.4 1.4L0 14zM7 7l1.4 1.4-1.4 1.4-1.4-1.4L7 7zm14 0l1.4 1.4-1.4 1.4-1.4-1.4L21 7zm0 14l1.4 1.4-1.4 1.4-1.4-1.4L21 21zm-14 0l1.4 1.4-1.4 1.4-1.4-1.4L7 21z"/></g></svg>')`,
                     backgroundSize: '28px 28px',
                 }}
             />
