@@ -1,6 +1,6 @@
 import React from 'react';
 import { User } from '../types';
-import { BookOpenIcon, ReportIcon, BulkInputIcon, ClassManagementIcon, HalaqahManagementIcon, CloseIcon, UsersIcon, CheckCircleIcon } from './Icons';
+import { BookOpenIcon, ReportIcon, BulkInputIcon, ClassManagementIcon, HalaqahManagementIcon, CloseIcon, UsersIcon, CheckCircleIcon, LogoutIcon } from './Icons';
 
 type View = 'Dashboard Guru' | 'Monitoring' | 'Resume Laporan' | 'Input Laporan' | 'Manajemen Kelas' | 'Manajemen Halaqah' | 'Manajemen Guru';
 
@@ -73,7 +73,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isOpen, se
           </button>
         </div>
 
-        <nav className="flex-1 py-8 space-y-2 overflow-y-auto">
+        <nav className="flex-1 py-8 space-y-2">
           {navItems.map(item => (
               <NavItem 
                   key={item.id} 
@@ -90,16 +90,17 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isOpen, se
           ))}
         </nav>
 
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t border-white/10 flex items-center justify-between">
           <div className="text-sm">
             <p className="font-semibold">{user?.name}</p>
             <p className="opacity-70">{user?.role}</p>
           </div>
            <button 
              onClick={onLogout}
-             className="w-full mt-3 text-left p-2 rounded-md text-sm font-semibold text-red-300 hover:bg-white/10"
+             className="p-2 rounded-full text-red-300 hover:bg-white/10 transition-colors"
+             aria-label="Logout"
            >
-             Logout
+             <LogoutIcon className="w-5 h-5" />
            </button>
         </div>
       </aside>
