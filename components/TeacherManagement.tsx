@@ -20,6 +20,7 @@ const TeacherFormModal: React.FC<{
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [role, setRole] = useState<'Koordinator' | 'Guru'>('Guru');
+    const [gender, setGender] = useState<'Ikhwan' | 'Akhwat'>('Ikhwan');
     
     const isEditMode = teacherData && 'id' in teacherData;
 
@@ -28,18 +29,20 @@ const TeacherFormModal: React.FC<{
             setName(teacherData.name);
             setEmail(teacherData.email);
             setRole(teacherData.role);
+            setGender(teacherData.gender || 'Ikhwan');
             setPassword(''); // Don't pre-fill password for security
         } else {
             setName('');
             setEmail('');
             setPassword('');
             setRole('Guru');
+            setGender('Ikhwan');
         }
     }, [teacherData]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const dataToSave: Omit<User, 'id' | 'password'> & {password?: string} = { name, email, role };
+        const dataToSave: Omit<User, 'id' | 'password'> & {password?: string} = { name, email, role, gender };
         if (password) {
             dataToSave.password = password;
         }
@@ -78,6 +81,19 @@ const TeacherFormModal: React.FC<{
                          <div>
                             <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
                             <input type="password" id="password" value={password} onChange={e => setPassword(e.target.value)} placeholder={isEditMode ? "Kosongkan jika tidak ingin mengubah" : ""} required={!isEditMode} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500"/>
+                        </div>
+                        <div>
+                             <label className="block text-sm font-medium text-gray-700">Gender</label>
+                             <div className="mt-2 flex space-x-4">
+                                <label className="inline-flex items-center">
+                                    <input type="radio" className="form-radio text-teal-600" value="Ikhwan" checked={gender === 'Ikhwan'} onChange={() => setGender('Ikhwan')} />
+                                    <span className="ml-2">Ikhwan (Laki-laki)</span>
+                                </label>
+                                <label className="inline-flex items-center">
+                                    <input type="radio" className="form-radio text-pink-600" value="Akhwat" checked={gender === 'Akhwat'} onChange={() => setGender('Akhwat')} />
+                                    <span className="ml-2">Akhwat (Perempuan)</span>
+                                </label>
+                             </div>
                         </div>
                         <div>
                              <label className="block text-sm font-medium text-gray-700">Role</label>

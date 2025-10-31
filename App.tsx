@@ -41,6 +41,18 @@ const App: React.FC = () => {
       const { data: usersData, error: usersError } = await supabase.from('guru').select('*');
       if (usersError) throw usersError;
       setUsers(usersData as User[]);
+      
+      // Refresh currentUser data with the latest from the database
+      // This ensures the user object has all the latest fields (like gender)
+      // and prevents issues with stale session storage data.
+      if (currentUser) {
+        const refreshedUser = (usersData as User[]).find(u => u.id === currentUser.id);
+        // Compare to prevent infinite re-render loops
+        if (refreshedUser && JSON.stringify(refreshedUser) !== JSON.stringify(currentUser)) {
+          setCurrentUser(refreshedUser);
+        }
+      }
+
 
       const { data: classesData, error: classesError } = await supabase
         .from('kelas')
@@ -69,7 +81,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [currentUser]);
 
   useEffect(() => {
     if (currentUser) {

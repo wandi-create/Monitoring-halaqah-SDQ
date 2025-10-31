@@ -72,6 +72,18 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ currentUser, classe
       await onUpdateReport(report);
     };
 
+    const getGreeting = () => {
+        if (currentUser.role === 'Guru') {
+            if (currentUser.gender === 'Ikhwan') {
+                return "Assalamu'alaikum ustadz!";
+            } else if (currentUser.gender === 'Akhwat') {
+                return "Assalamu'alaikum ustadzah!";
+            }
+        }
+        // Fallback for Koordinator or if gender is not set
+        return `Assalamu'alaikum, ${currentUser.name.split(' ')[0]}!`;
+    };
+
     return (
         <div className="relative isolate">
              <div
@@ -83,7 +95,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ currentUser, classe
                 }}
             />
             <header className="mb-8">
-                <h1 className="text-4xl font-bold text-gray-800">Assalamu'alaikum, {currentUser.name.split(' ')[0]}!</h1>
+                <h1 className="text-4xl font-bold text-gray-800">{getGreeting()}</h1>
                 <p className="text-gray-500 mt-2">Selamat datang di dashboard Anda. Mari kita lihat progres halaqah bulan ini.</p>
             </header>
 

@@ -4,6 +4,7 @@ export interface User {
   email: string;
   password?: string; // This should be handled securely, not stored as plain text
   role: 'Koordinator' | 'Guru';
+  gender: 'Ikhwan' | 'Akhwat';
 }
 
 export type FollowUpStatus = 'Belum Dimulai' | 'Sedang Berjalan' | 'Selesai' | 'Butuh Diskusi';
