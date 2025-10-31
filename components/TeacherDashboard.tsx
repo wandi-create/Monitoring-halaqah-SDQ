@@ -95,7 +95,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ currentUser, classe
                 }}
             />
             <header className="mb-8">
-                <h1 className="text-4xl font-bold text-gray-800">{getGreeting()}</h1>
+                <h1 className="text-3xl sm:text-4xl font-bold text-gray-800">{getGreeting()}</h1>
                 <p className="text-gray-500 mt-2">Selamat datang di dashboard Anda. Mari kita lihat progres halaqah bulan ini.</p>
             </header>
 
