@@ -73,7 +73,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isOpen, se
           </button>
         </div>
 
-        <nav className="flex-1 py-8 space-y-2">
+        <nav className="flex-1 py-8 space-y-2 overflow-y-auto">
           {navItems.map(item => (
               <NavItem 
                   key={item.id} 
