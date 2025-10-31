@@ -32,7 +32,7 @@ export interface Report {
 export interface Halaqah {
   id: string; // uuid
   name: string;
-  teacher_ids: string[]; // array of user ids (uuids)
+  teacher_id: string; // uuid of a single teacher
   student_count: number;
   class_id: string; // Foreign key to SchoolClass
   laporan: Report[]; // Renamed from 'reports' to match Supabase table name

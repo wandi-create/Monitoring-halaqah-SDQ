@@ -20,7 +20,7 @@ const HalaqahFormModal: React.FC<{
 }> = ({ isOpen, onClose, onSave, editingData, teachers, classes }) => {
     const [classId, setClassId] = useState<string>('');
     const [name, setName] = useState('');
-    const [selectedTeacherIds, setSelectedTeacherIds] = useState<string[]>([]);
+    const [selectedTeacherId, setSelectedTeacherId] = useState<string>('');
     const [studentCount, setStudentCount] = useState(0);
 
     const isEditMode = !!editingData.halaqah;
@@ -30,32 +30,29 @@ const HalaqahFormModal: React.FC<{
             if (isEditMode && editingData.halaqah) {
                 setClassId(editingData.classId || '');
                 setName(editingData.halaqah.name);
-                setSelectedTeacherIds(editingData.halaqah.teacher_ids || []);
+                setSelectedTeacherId(editingData.halaqah.teacher_id || '');
                 setStudentCount(editingData.halaqah.student_count || 0);
             } else {
                 setClassId(classes[0]?.id || '');
                 setName('');
-                setSelectedTeacherIds([]);
+                setSelectedTeacherId('');
                 setStudentCount(0);
             }
         }
     }, [isOpen, editingData, isEditMode, classes]);
     
-    const handleTeacherToggle = (teacherId: string) => {
-        setSelectedTeacherIds(prev =>
-            prev.includes(teacherId)
-                ? prev.filter(id => id !== teacherId)
-                : [...prev, teacherId]
-        );
-    };
-
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!classId) {
             alert('Silakan pilih kelas terlebih dahulu.');
             return;
         }
-        const dataToSave = { name, teacher_ids: selectedTeacherIds, student_count: studentCount };
+        if (!selectedTeacherId) {
+            alert('Silakan pilih pengajar terlebih dahulu.');
+            return;
+        }
+
+        const dataToSave = { name, teacher_id: selectedTeacherId, student_count: studentCount };
         if (isEditMode && editingData.halaqah) {
             onSave(classId, { ...editingData.halaqah, ...dataToSave, laporan: editingData.halaqah.laporan || [] });
         } else {
@@ -98,21 +95,22 @@ const HalaqahFormModal: React.FC<{
                             <input type="number" id="studentCount" value={studentCount} onChange={e => setStudentCount(Number(e.target.value))} required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500"/>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Pilih Pengajar</label>
-                            <div className="mt-2 space-y-2 max-h-48 overflow-y-auto border border-gray-300 rounded-md p-3">
+                            <label htmlFor="teacherId" className="block text-sm font-medium text-gray-700">Pilih Pengajar</label>
+                            <select
+                                id="teacherId"
+                                value={selectedTeacherId}
+                                onChange={e => setSelectedTeacherId(e.target.value)}
+                                required
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500"
+                            >
+                                <option value="" disabled>-- Pilih Pengajar --</option>
                                 {teachers.filter(t => t.role === 'Guru').map(teacher => (
-                                    <label key={teacher.id} className="flex items-center">
-                                        <input
-                                            type="checkbox"
-                                            checked={selectedTeacherIds.includes(teacher.id)}
-                                            onChange={() => handleTeacherToggle(teacher.id)}
-                                            className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
-                                        />
-                                        <span className="ml-3 text-gray-700">{teacher.name}</span>
-                                    </label>
+                                    <option key={teacher.id} value={teacher.id}>
+                                        {teacher.name}
+                                    </option>
                                 ))}
-                                {teachers.length === 0 && <p className="text-sm text-gray-500">Tidak ada data guru. Silakan tambah di Manajemen Guru.</p>}
-                            </div>
+                            </select>
+                            {teachers.filter(t => t.role === 'Guru').length === 0 && <p className="mt-2 text-sm text-gray-500">Tidak ada data guru. Silakan tambah di Manajemen Guru.</p>}
                         </div>
                     </div>
                     <div className="mt-6 flex justify-end space-x-3">
@@ -191,7 +189,7 @@ const HalaqahManagement: React.FC<HalaqahManagementProps> = ({ classes, teachers
                                             </th>
                                             <td className="px-6 py-4">{halaqah.student_count}</td>
                                             <td className="px-6 py-4">
-                                                {halaqah.teacher_ids.map(id => <div key={id}>{getTeacherName(id)}</div>)}
+                                                {getTeacherName(halaqah.teacher_id)}
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <button onClick={() => handleOpenEditModal(schoolClass.id, halaqah)} className="p-2 text-yellow-500 hover:text-yellow-700">

@@ -132,7 +132,7 @@ const TeacherManagement: React.FC<TeacherManagementProps> = ({ teachers, classes
     const getHalaqahAssignments = (teacherId: string) => {
         return classes
             .flatMap(c => c.halaqah.map(h => ({ ...h, className: c.short_name })))
-            .filter(h => h.teacher_ids.includes(teacherId))
+            .filter(h => h.teacher_id === teacherId)
             .map(h => `${h.className} • ${h.name}`)
             .join(', ');
     };

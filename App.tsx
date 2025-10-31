@@ -53,7 +53,7 @@ const App: React.FC = () => {
           ...c,
           halaqah: (c.halaqah || []).map(h => ({
               ...h,
-              teacher_ids: Array.isArray(h.teacher_ids) ? h.teacher_ids : [],
+              teacher_id: h.teacher_ids || null, // Supabase column is teacher_ids but holds a single value
               laporan: h.laporan || []
           }))
       }));
@@ -135,7 +135,7 @@ const App: React.FC = () => {
     const { error } = await supabase.from('halaqah').insert({
         class_id: classId,
         name: newHalaqah.name,
-        teacher_ids: newHalaqah.teacher_ids,
+        teacher_ids: newHalaqah.teacher_id, // Column name in DB is teacher_ids
         student_count: newHalaqah.student_count
     });
     if (error) alert(error.message);
@@ -147,7 +147,7 @@ const App: React.FC = () => {
      setIsMutating(true);
      const { error } = await supabase.from('halaqah').update({
         name: updatedHalaqah.name,
-        teacher_ids: updatedHalaqah.teacher_ids,
+        teacher_ids: updatedHalaqah.teacher_id, // Column name in DB is teacher_ids
         student_count: updatedHalaqah.student_count
      }).eq('id', updatedHalaqah.id);
      if (error) alert(error.message);
@@ -187,7 +187,7 @@ const App: React.FC = () => {
   const handleDeleteUser = async (userId: string) => {
     setIsMutating(true);
     const isTeacherAssigned = classes.some(c => 
-        c.halaqah.some(h => h.teacher_ids.includes(userId))
+        c.halaqah.some(h => h.teacher_id === userId)
     );
 
     if (isTeacherAssigned) {
@@ -269,7 +269,7 @@ const handleUpdateReport = async (updatedReport: Report) => {
     // Filter for 'Guru'
     return classes.map(c => ({
         ...c,
-        halaqah: c.halaqah.filter(h => h.teacher_ids.includes(currentUser.id))
+        halaqah: c.halaqah.filter(h => h.teacher_id === currentUser.id)
     })).filter(c => c.halaqah.length > 0);
   }, [classes, currentUser]);
 

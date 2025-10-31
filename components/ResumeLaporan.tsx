@@ -11,7 +11,7 @@ import ReportDetailModal from './ReportDetailModal';
 type ExtendedReport = Report & {
   halaqahName: string;
   className: string;
-  teacherNames: string[];
+  teacherName: string;
 };
 
 interface ResumeLaporanProps {
@@ -66,7 +66,7 @@ const ResumeLaporan: React.FC<ResumeLaporanProps> = ({ classes, teachers, curren
           ...report,
           halaqahName: halaqah.name,
           className: schoolClass.name,
-          teacherNames: halaqah.teacher_ids.map(id => teachers.find(t => t.id === id)?.name || 'N/A')
+          teacherName: teachers.find(t => t.id === halaqah.teacher_id)?.name || 'N/A'
         }))
       )
     )
@@ -123,7 +123,7 @@ const ResumeLaporan: React.FC<ResumeLaporanProps> = ({ classes, teachers, curren
                         <p className="text-xs text-gray-500">{MONTHS[report.month - 1]} {report.year}</p>
                         <h2 className="text-md font-bold text-gray-800 mt-1 truncate">{report.halaqahName} - {report.className}</h2>
                         <p className="text-xs text-gray-500 mt-1">
-                          <span className="font-semibold text-gray-600">{report.teacherNames.join(', ')}</span>
+                          <span className="font-semibold text-gray-600">{report.teacherName}</span>
                         </p>
                     </div>
 

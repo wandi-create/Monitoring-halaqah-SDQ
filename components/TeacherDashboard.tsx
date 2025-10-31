@@ -21,7 +21,7 @@ type ExtendedHalaqah = Halaqah & {
 type ExtendedReport = Report & {
   halaqahName: string;
   className: string;
-  teacherNames: string[];
+  teacherName: string;
 };
 
 const StatCard: React.FC<{ icon: React.ReactNode; title: string; value: string | number; color: string }> = ({ icon, title, value, color }) => (
@@ -64,7 +64,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ currentUser, classe
             ...report,
             halaqahName: halaqah.name,
             className: halaqah.className,
-            teacherNames: halaqah.teacher_ids.map(id => teachers.find(t => t.id === id)?.name || 'N/A')
+            teacherName: teachers.find(t => t.id === halaqah.teacher_id)?.name || 'N/A'
         });
     }
 

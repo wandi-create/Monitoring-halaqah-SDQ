@@ -7,7 +7,7 @@ import ReportDetailModal from './ReportDetailModal';
 type ExtendedReport = Report & {
   halaqahName: string;
   className: string;
-  teacherNames: string[];
+  teacherName: string;
 };
 
 interface MonitoringDashboardProps {
@@ -26,8 +26,8 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ classes, teac
 
   const displayedClasses = activeTab === 'Ikhwan' ? ikhwanClasses : akhwatClasses;
   
-  const getTeacherNames = (teacherIds: string[]): string => {
-      return teacherIds.map(id => teachers.find(t => t.id === id)?.name || 'N/A').join('<br/>');
+  const getTeacherName = (teacherId: string): string => {
+      return teachers.find(t => t.id === teacherId)?.name || 'N/A';
   }
 
   const handleViewReport = (report: Report, halaqah: Halaqah, schoolClass: SchoolClass) => {
@@ -35,7 +35,7 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ classes, teac
         ...report,
         halaqahName: halaqah.name,
         className: schoolClass.name,
-        teacherNames: halaqah.teacher_ids.map(id => teachers.find(t => t.id === id)?.name || 'N/A')
+        teacherName: getTeacherName(halaqah.teacher_id)
     };
     setSelectedReport(extendedReport);
   };
@@ -97,7 +97,7 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ classes, teac
                     <div className="flex justify-between items-center">
                       <div>
                         <h3 className="font-semibold text-gray-700">{halaqah.name}</h3>
-                        <p className="text-xs text-gray-500 leading-tight mt-1" dangerouslySetInnerHTML={{ __html: getTeacherNames(halaqah.teacher_ids) }} />
+                        <p className="text-xs text-gray-500 leading-tight mt-1">{getTeacherName(halaqah.teacher_id)}</p>
                       </div>
                       <div className="flex items-center space-x-2">
                         {currentReport ? (

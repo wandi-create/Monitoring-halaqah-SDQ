@@ -9,7 +9,7 @@ import {
 type ExtendedReport = Report & {
   halaqahName: string;
   className: string;
-  teacherNames: string[];
+  teacherName: string;
 };
 
 interface ReportDetailModalProps {
@@ -90,7 +90,7 @@ const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ report, onClose, 
 
     const handleSave = async () => {
         setIsSaving(true);
-        const { halaqahName, className, teacherNames, ...coreReport } = report;
+        const { halaqahName, className, teacherName, ...coreReport } = report;
         const updatedReport: Report = {
             ...coreReport,
             is_read: isRead,
@@ -124,7 +124,7 @@ const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ report, onClose, 
                         <div>
                             <p className="text-sm text-gray-500">{MONTHS[report.month - 1]} {report.year}</p>
                             <h2 className="text-xl font-bold text-gray-800 mt-1">{report.halaqahName} - {report.className}</h2>
-                            <p className="text-sm text-gray-500 mt-1">Pengajar: <span className="font-semibold text-gray-600">{report.teacherNames.join(', ')}</span></p>
+                            <p className="text-sm text-gray-500 mt-1">Pengajar: <span className="font-semibold text-gray-600">{report.teacherName}</span></p>
                         </div>
                         <button onClick={onClose} className="p-2 -mr-2 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100">
                             <CloseIcon className="w-6 h-6" />
