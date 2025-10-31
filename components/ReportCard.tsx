@@ -229,41 +229,6 @@ const ReportCard: React.FC<ReportCardProps> = ({ schoolClass, halaqah, onSaveRep
                 </div>
             </div>
         ))}
-        
-        <div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-3">Catatan Koordinator</h3>
-            <div className="space-y-4">
-              {(currentReport['coordinator_notes'] || []).map((section, index) => (
-                <div key={section.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative group">
-                    <input
-                        type="text"
-                        value={section.title}
-                        onChange={(e) => handleSectionChange('coordinator_notes', section.id, 'title', e.target.value)}
-                        placeholder={`Judul Catatan ${index + 1}`}
-                        className="w-full text-md font-semibold p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 transition mb-2"
-                    />
-                    <textarea
-                        rows={3}
-                        value={section.content}
-                        onKeyDown={handleTextareaKeyDown}
-                        onChange={(e) => handleSectionChange('coordinator_notes', section.id, 'content', e.target.value)}
-                        placeholder="Tuliskan catatan tambahan dari koordinator..."
-                        className="w-full text-md p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 transition"
-                    />
-                     <button onClick={() => handleRemoveSection('coordinator_notes', section.id)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <TrashIcon className="w-4 h-4" />
-                    </button>
-                </div>
-              ))}
-              <button 
-                onClick={() => handleAddSection('coordinator_notes', `Catatan Baru`)}
-                className="flex items-center gap-2 text-sm font-medium text-teal-600 hover:text-teal-800 py-2 px-3 border-2 border-dashed border-gray-300 rounded-lg w-full justify-center hover:bg-teal-50 hover:border-teal-400 transition-all"
-              >
-                <PlusIcon className="w-4 h-4" />
-                Tambah Catatan
-              </button>
-            </div>
-        </div>
       </div>
 
       <div className="mt-8 pt-6 border-t border-slate-200 flex justify-end items-center gap-4">
