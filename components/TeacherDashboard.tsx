@@ -1,9 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { SchoolClass, User, Report, Halaqah } from '../types';
 import { MONTHS } from '../constants';
-import { UsersIcon, DocumentTextIcon, CheckCircleIcon, EyeIcon, ClockIcon, PencilIcon } from './Icons';
+import { UsersIcon, DocumentTextIcon, CheckCircleIcon, EyeIcon, ClockIcon } from './Icons';
 import ReportDetailModal from './ReportDetailModal';
-import ReportInputModal from './ReportInputModal';
 
 
 interface TeacherDashboardProps {
@@ -39,8 +38,6 @@ const StatCard: React.FC<{ icon: React.ReactNode; title: string; value: string |
 
 const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ currentUser, classes, teachers, onUpdateReport }) => {
     const [selectedReportForDetail, setSelectedReportForDetail] = useState<ExtendedReport | null>(null);
-    const [editingHalaqah, setEditingHalaqah] = useState<ExtendedHalaqah | null>(null);
-
 
     const date = new Date();
     const currentMonth = date.getMonth() + 1;
@@ -67,10 +64,6 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ currentUser, classe
             teacherName: teachers.find(t => t.id === halaqah.teacher_id)?.name || 'N/A'
         });
     }
-
-    const handleSaveReport = async (report: Report, halaqahId: string) => {
-      await onUpdateReport(report);
-    };
 
     const getGreeting = () => {
         if (currentUser.role === 'Guru') {
@@ -106,7 +99,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ currentUser, classe
             </div>
 
             <div className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg border">
-                <h2 className="text-2xl font-bold text-gray-800 mb-5">Laporan Halaqah Anda ({MONTHS[currentMonth-1]} {currentYear})</h2>
+                <h2 className="text-2xl font-bold text-gray-800 mb-5">Status Laporan Halaqah ({MONTHS[currentMonth-1]} {currentYear})</h2>
                 <div className="space-y-4">
                     {allHalaqahs.map(halaqah => {
                         const currentReport = halaqah.laporan?.find(r => r.year === currentYear && r.month === currentMonth);
@@ -117,7 +110,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ currentUser, classe
                                     <h3 className="font-bold text-lg text-gray-800">{halaqah.name}</h3>
                                     <p className="text-sm text-gray-500">{halaqah.className}</p>
                                 </div>
-                                <div className="flex items-center justify-start md:justify-end gap-3">
+                                <div className="flex items-center justify-start md:justify-end gap-3 flex-wrap">
                                     {currentReport ? (
                                          <div className="flex items-center gap-2 text-sm font-semibold text-green-600 bg-green-100 px-3 py-1.5 rounded-full">
                                             <CheckCircleIcon className="w-5 h-5"/>
@@ -129,15 +122,6 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ currentUser, classe
                                             <span>Belum Diisi</span>
                                         </div>
                                     )}
-                                    
-                                     <button 
-                                        onClick={() => setEditingHalaqah(halaqah)}
-                                        className="flex items-center gap-2 text-sm font-semibold text-white bg-blue-500 hover:bg-blue-600 px-3 py-1.5 rounded-md transition-all"
-                                        aria-label={currentReport ? "Edit Laporan" : "Input Laporan"}
-                                    >
-                                        <PencilIcon className="w-4 h-4"/>
-                                        <span>{currentReport ? "Edit" : "Input"}</span>
-                                    </button>
 
                                     {currentReport && (
                                         <button 
@@ -165,18 +149,6 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ currentUser, classe
                       setSelectedReportForDetail(null);
                     }}
                     currentUser={currentUser}
-                />
-            )}
-
-            {editingHalaqah && (
-                <ReportInputModal 
-                  isOpen={!!editingHalaqah}
-                  onClose={() => setEditingHalaqah(null)}
-                  onSave={handleSaveReport}
-                  schoolClass={classes.find(c => c.id === editingHalaqah.classId)!}
-                  halaqah={editingHalaqah}
-                  existingReport={editingHalaqah.laporan?.find(r => r.year === currentYear && r.month === currentMonth)}
-                  months={MONTHS}
                 />
             )}
         </div>

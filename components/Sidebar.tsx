@@ -45,8 +45,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isOpen, se
   const allNavItems: { id: View; icon: React.ReactNode; title: string; subtitle: string; roles: ('Koordinator' | 'Guru')[]; }[] = [
     { id: 'Dashboard Guru', icon: <CheckCircleIcon className="w-5 h-5"/>, title: "Dashboard", subtitle: "Tugas & Laporan Anda", roles: ['Guru'] },
     { id: 'Monitoring', icon: <BookOpenIcon className="w-5 h-5"/>, title: "Monitoring", subtitle: "Lihat monitoring halaqah", roles: ['Koordinator'] },
-    { id: 'Resume Laporan', icon: <ReportIcon className="w-5 h-5"/>, title: "Resume Laporan", subtitle: "Ringkasan laporan bulanan", roles: ['Koordinator', 'Guru'] },
     { id: 'Input Laporan', icon: <BulkInputIcon className="w-5 h-5"/>, title: "Input Laporan", subtitle: "Input laporan massal", roles: ['Koordinator'] },
+    { id: 'Resume Laporan', icon: <ReportIcon className="w-5 h-5"/>, title: "Resume Laporan", subtitle: "Ringkasan laporan bulanan", roles: ['Koordinator', 'Guru'] },
     { id: 'Manajemen Guru', icon: <UsersIcon className="w-5 h-5"/>, title: "Manajemen Guru", subtitle: "Kelola data pengajar", roles: ['Koordinator'] },
     { id: 'Manajemen Kelas', icon: <ClassManagementIcon className="w-5 h-5"/>, title: "Manajemen Kelas", subtitle: "Kelola data kelas", roles: ['Koordinator'] },
     { id: 'Manajemen Halaqah', icon: <HalaqahManagementIcon className="w-5 h-5"/>, title: "Manajemen Halaqah", subtitle: "Kelola data halaqah", roles: ['Koordinator'] },
@@ -74,20 +74,22 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isOpen, se
         </div>
 
         <nav className="flex-1 py-8 space-y-2">
-          {navItems.map(item => (
-              <NavItem 
-                  key={item.id} 
-                  id={item.id}
-                  icon={item.icon}
-                  title={item.title}
-                  subtitle={item.subtitle}
-                  active={activeView === item.id}
-                  onClick={(view) => {
-                    setActiveView(view);
-                    setIsOpen(false); // Close sidebar on mobile after navigation
-                  }}
-              />
-          ))}
+          {navItems.map(item => {
+              return (
+                <NavItem 
+                    key={item.id} 
+                    id={item.id}
+                    icon={item.icon}
+                    title={item.title}
+                    subtitle={item.subtitle}
+                    active={activeView === item.id}
+                    onClick={(view) => {
+                      setActiveView(view);
+                      setIsOpen(false); // Close sidebar on mobile after navigation
+                    }}
+                />
+              )
+          })}
         </nav>
 
         <div className="p-4 border-t border-white/10 flex items-center justify-between">

@@ -110,6 +110,7 @@ const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ report, onClose, 
         { label: 'Tantangan Terindikasi', sections: normalizeReportField(report.identified_challenges, 'Tantangan') },
         { label: 'Rekomendasi Tindak Lanjut', sections: normalizeReportField(report.follow_up_recommendations, 'Rekomendasi') },
         { label: 'Target Bulan Depan', sections: normalizeReportField(report.next_month_target, 'Target') },
+        { label: 'Catatan Koordinator', sections: normalizeReportField(report.coordinator_notes, 'Catatan Koordinator') },
     ];
 
 
@@ -133,6 +134,21 @@ const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ report, onClose, 
                 </header>
                 
                 <main className="flex-1 overflow-y-auto p-6 space-y-8">
+                    <div className="grid grid-cols-3 gap-4 text-center">
+                        <div className="bg-white p-4 rounded-lg border">
+                            <p className="text-sm text-gray-500">Kehadiran Rata-rata</p>
+                            <p className="text-2xl font-bold text-teal-600">{(report.average_attendance ?? 0)}%</p>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg border">
+                            <p className="text-sm text-gray-500">Murid Lancar</p>
+                            <p className="text-2xl font-bold text-teal-600">{report.fluent_students ?? 0}</p>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg border">
+                            <p className="text-sm text-gray-500">Murid Perlu Perhatian</p>
+                            <p className="text-2xl font-bold text-teal-600">{report.students_needing_attention ?? 0}</p>
+                        </div>
+                    </div>
+
                     {reportCategories.map(category => (
                         <div key={category.label}>
                             <h3 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-teal-200">{category.label}</h3>

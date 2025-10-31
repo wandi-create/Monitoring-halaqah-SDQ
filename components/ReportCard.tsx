@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { SchoolClass, Halaqah, Report, ReportSection } from '../types';
-import { CheckCircleIcon, SaveIcon, PlusIcon, TrashIcon } from './Icons';
+import { SaveIcon, PlusIcon, TrashIcon } from './Icons';
 
 interface ReportCardProps {
   schoolClass: SchoolClass;
@@ -12,16 +12,19 @@ interface ReportCardProps {
 }
 
 // FIX: Use snake_case to match the Report type.
-const BLANK_REPORT_FIELDS: Omit<Report, 'id' | 'halaqah_id' | 'month' | 'year' | 'is_read' | 'follow_up_status' | 'teacher_notes'> = {
+const BLANK_REPORT_FIELDS: Omit<Report, 'id' | 'halaqah_id' | 'month' | 'year' | 'is_read' | 'follow_up_status' | 'teacher_notes' | 'average_attendance' | 'fluent_students' | 'students_needing_attention'> = {
   main_insight: [],
   student_segmentation: [],
   identified_challenges: [],
   follow_up_recommendations: [],
   next_month_target: [],
+  coordinator_notes: [],
 };
 
 // FIX: Use snake_case for ReportField type.
-type ReportField = keyof typeof BLANK_REPORT_FIELDS;
+type ReportField = keyof Omit<typeof BLANK_REPORT_FIELDS, 'coordinator_notes'>;
+type AllReportField = keyof typeof BLANK_REPORT_FIELDS;
+
 
 const normalizeReportField = (fieldData: any, defaultTitle: string): ReportSection[] => {
   if (Array.isArray(fieldData)) {
@@ -54,6 +57,7 @@ const ReportCard: React.FC<ReportCardProps> = ({ schoolClass, halaqah, onSaveRep
       reportValues.identified_challenges = normalizeReportField(existingReport.identified_challenges, 'Tantangan');
       reportValues.follow_up_recommendations = normalizeReportField(existingReport.follow_up_recommendations, 'Rekomendasi');
       reportValues.next_month_target = normalizeReportField(existingReport.next_month_target, 'Target');
+      reportValues.coordinator_notes = normalizeReportField(existingReport.coordinator_notes, 'Catatan Koordinator');
     }
 
     return { 
@@ -63,6 +67,9 @@ const ReportCard: React.FC<ReportCardProps> = ({ schoolClass, halaqah, onSaveRep
         halaqah_id: halaqah.id,
         year, 
         month,
+        average_attendance: existingReport?.average_attendance || undefined,
+        fluent_students: existingReport?.fluent_students || undefined,
+        students_needing_attention: existingReport?.students_needing_attention || undefined,
         // FIX: Use snake_case properties
         is_read: existingReport?.is_read || false,
         follow_up_status: existingReport?.follow_up_status || 'Belum Dimulai',
@@ -76,7 +83,7 @@ const ReportCard: React.FC<ReportCardProps> = ({ schoolClass, halaqah, onSaveRep
     setIsModified(false);
   }, [selectedYear, selectedMonth, halaqah, getReportForDate]);
   
-  const handleSectionChange = (field: ReportField, sectionId: string, part: 'title' | 'content', value: string) => {
+  const handleSectionChange = (field: AllReportField, sectionId: string, part: 'title' | 'content', value: string) => {
     if (!currentReport) return;
     const sections = currentReport[field];
     const updatedSections = sections.map(sec => 
@@ -86,20 +93,20 @@ const ReportCard: React.FC<ReportCardProps> = ({ schoolClass, halaqah, onSaveRep
     setIsModified(true);
   };
 
-  const handleAddSection = (field: ReportField, defaultTitle: string) => {
+  const handleAddSection = (field: AllReportField, defaultTitle: string) => {
       if (!currentReport) return;
       const newSection: ReportSection = {
           id: `sec-${Date.now()}-${Math.random()}`,
           title: defaultTitle,
           content: '',
       };
-      setCurrentReport(prev => prev ? { ...prev, [field]: [...prev[field], newSection] } : null);
+      setCurrentReport(prev => prev ? { ...prev, [field]: [...(prev[field] || []), newSection] } : null);
       setIsModified(true);
   };
 
-  const handleRemoveSection = (field: ReportField, sectionId: string) => {
+  const handleRemoveSection = (field: AllReportField, sectionId: string) => {
       if (!currentReport || !window.confirm('Apakah Anda yakin ingin menghapus bagian ini?')) return;
-      setCurrentReport(prev => prev ? { ...prev, [field]: prev[field].filter(sec => sec.id !== sectionId)} : null);
+      setCurrentReport(prev => prev ? { ...prev, [field]: prev[field]?.filter(sec => sec.id !== sectionId)} : null);
       setIsModified(true);
   };
 
@@ -156,11 +163,11 @@ const ReportCard: React.FC<ReportCardProps> = ({ schoolClass, halaqah, onSaveRep
   ];
 
   if (!currentReport) {
-    return <div className="bg-white p-6 rounded-lg shadow-md">Loading report...</div>;
+    return <div className="p-6">Loading report...</div>;
   }
   
   return (
-    <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
+    <div className="p-6">
       <div className="flex flex-col sm:flex-row justify-between sm:items-center border-b border-slate-200 pb-4 mb-6">
         <div>
             <h2 className="text-2xl font-bold text-emerald-700">{halaqah.name}</h2>
@@ -222,28 +229,40 @@ const ReportCard: React.FC<ReportCardProps> = ({ schoolClass, halaqah, onSaveRep
                 </div>
             </div>
         ))}
-
-        <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200 mt-6">
-           <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2 mb-4">
-            <CheckCircleIcon className="w-6 h-6 text-emerald-600" />
-            Area Konfirmasi Guru
-          </h3>
-          <div className="space-y-3">
-             <div className="flex items-center">
-                <input
-                  id="isRead"
-                  type="checkbox"
-                  // FIX: Use snake_case property
-                  checked={currentReport.is_read}
-                  // FIX: Use snake_case property
-                  onChange={(e) => setCurrentReport(prev => prev ? { ...prev, is_read: e.target.checked } : null)}
-                  className="h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                />
-                <label htmlFor="isRead" className="ml-3 block text-sm font-medium text-slate-700">
-                  Laporan sudah dibaca
-                </label>
-              </div>
-          </div>
+        
+        <div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">Catatan Koordinator</h3>
+            <div className="space-y-4">
+              {(currentReport['coordinator_notes'] || []).map((section, index) => (
+                <div key={section.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative group">
+                    <input
+                        type="text"
+                        value={section.title}
+                        onChange={(e) => handleSectionChange('coordinator_notes', section.id, 'title', e.target.value)}
+                        placeholder={`Judul Catatan ${index + 1}`}
+                        className="w-full text-md font-semibold p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 transition mb-2"
+                    />
+                    <textarea
+                        rows={3}
+                        value={section.content}
+                        onKeyDown={handleTextareaKeyDown}
+                        onChange={(e) => handleSectionChange('coordinator_notes', section.id, 'content', e.target.value)}
+                        placeholder="Tuliskan catatan tambahan dari koordinator..."
+                        className="w-full text-md p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 transition"
+                    />
+                     <button onClick={() => handleRemoveSection('coordinator_notes', section.id)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <TrashIcon className="w-4 h-4" />
+                    </button>
+                </div>
+              ))}
+              <button 
+                onClick={() => handleAddSection('coordinator_notes', `Catatan Baru`)}
+                className="flex items-center gap-2 text-sm font-medium text-teal-600 hover:text-teal-800 py-2 px-3 border-2 border-dashed border-gray-300 rounded-lg w-full justify-center hover:bg-teal-50 hover:border-teal-400 transition-all"
+              >
+                <PlusIcon className="w-4 h-4" />
+                Tambah Catatan
+              </button>
+            </div>
         </div>
       </div>
 

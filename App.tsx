@@ -231,6 +231,10 @@ const App: React.FC = () => {
       identified_challenges: report.identified_challenges,
       follow_up_recommendations: report.follow_up_recommendations,
       next_month_target: report.next_month_target,
+      coordinator_notes: report.coordinator_notes,
+      average_attendance: report.average_attendance,
+      fluent_students: report.fluent_students,
+      students_needing_attention: report.students_needing_attention,
       is_read: report.is_read,
       follow_up_status: report.follow_up_status,
       teacher_notes: report.teacher_notes,
@@ -260,6 +264,10 @@ const handleUpdateReport = async (updatedReport: Report) => {
         identified_challenges: reportData.identified_challenges,
         follow_up_recommendations: reportData.follow_up_recommendations,
         next_month_target: reportData.next_month_target,
+        coordinator_notes: reportData.coordinator_notes,
+        average_attendance: reportData.average_attendance,
+        fluent_students: reportData.fluent_students,
+        students_needing_attention: reportData.students_needing_attention,
         is_read: reportData.is_read,
         follow_up_status: reportData.follow_up_status,
         teacher_notes: reportData.teacher_notes,
@@ -328,10 +336,11 @@ const handleUpdateReport = async (updatedReport: Report) => {
                 onDeleteHalaqah={handleDeleteHalaqah}
             />;
       case 'Input Laporan':
+        // This view is now only for Koordinator
         return <BulkInput
-                  classes={filteredClasses}
-                  onBulkUpdate={handleBulkUpdateReports}
-                />;
+          classes={filteredClasses}
+          onUpdateReport={handleUpdateReport}
+        />;
       case 'Resume Laporan':
         return <ResumeLaporan 
             classes={filteredClasses} 

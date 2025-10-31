@@ -25,6 +25,10 @@ export interface Report {
   identified_challenges: ReportSection[];
   follow_up_recommendations: ReportSection[];
   next_month_target: ReportSection[];
+  coordinator_notes?: ReportSection[];
+  average_attendance?: number;
+  fluent_students?: number;
+  students_needing_attention?: number;
   is_read: boolean;
   follow_up_status: FollowUpStatus;
   teacher_notes: string;
