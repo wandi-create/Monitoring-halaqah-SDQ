@@ -42,57 +42,61 @@ const App: React.FC = () => {
       if (usersError) throw usersError;
       setUsers(usersData as User[]);
       
-      // Refresh currentUser data with the latest from the database
-      // This ensures the user object has all the latest fields (like gender)
-      // and prevents issues with stale session storage data.
       if (currentUser) {
         const refreshedUser = (usersData as User[]).find(u => u.id === currentUser.id);
-        // Compare to prevent infinite re-render loops
         if (refreshedUser && JSON.stringify(refreshedUser) !== JSON.stringify(currentUser)) {
           setCurrentUser(refreshedUser);
         }
       }
 
-
       const { data: classesData, error: classesError } = await supabase
         .from('kelas')
-        .select(`*, halaqah(*, laporan(*))`)
+        .select(`
+          *,
+          halaqah (
+            *,
+            laporan(*)
+          )
+        `)
         .order('name', { ascending: true });
         
       if (classesError) throw classesError;
       
       const formattedClasses = classesData.map(c => ({
           ...c,
-          halaqah: (c.halaqah || []).map(h => ({
+          halaqah: (c.halaqah || []).map((h: any) => {
+            const reportsArray = Array.isArray(h.laporan) ? h.laporan : (h.laporan ? [h.laporan] : []);
+            const mappedLaporan = reportsArray.map((r: any): Report => ({
+              id: r.id,
+              halaqah_id: r.halaqah_id,
+              month: r.month || 0,
+              year: r.year || 0,
+              main_insight: r.main_insight || [],
+              student_segmentation: r.student_segmentation || [],
+              identified_challenges: r.identified_challenges || [],
+              follow_up_recommendations: r.follow_up_recommendations || [],
+              next_month_target: r.next_month_target || [],
+              coordinator_notes: r.coordinator_notes || [],
+              average_attendance: r.average_attendance ?? 0,
+              fluent_students: r.fluent_students ?? 0,
+              students_needing_attention: r.students_needing_attention ?? 0,
+              is_read: r.is_read || false,
+              follow_up_status: r.follow_up_status || 'Belum Dimulai',
+              teacher_notes: r.teacher_notes || '',
+            }));
+
+            return {
               ...h,
-              teacher_id: String(h.teacher_ids || ''),
-              // Deep map reports to ensure data integrity and provide safe defaults, preventing crashes from null values.
-              laporan: (h.laporan || []).map((r: any): Report => ({
-                id: r.id,
-                halaqah_id: r.halaqah_id,
-                month: r.month || 0,
-                year: r.year || 0,
-                main_insight: r.main_insight || [],
-                student_segmentation: r.student_segmentation || [],
-                identified_challenges: r.identified_challenges || [],
-                follow_up_recommendations: r.follow_up_recommendations || [],
-                next_month_target: r.next_month_target || [],
-                coordinator_notes: r.coordinator_notes || [],
-                average_attendance: r.average_attendance ?? 0,
-                fluent_students: r.fluent_students ?? 0,
-                students_needing_attention: r.students_needing_attention ?? 0,
-                is_read: r.is_read || false,
-                follow_up_status: r.follow_up_status || 'Belum Dimulai',
-                teacher_notes: r.teacher_notes || '',
-              }))
-          }))
+              laporan: mappedLaporan,
+            };
+          }),
       }));
       
       setClasses(formattedClasses as unknown as SchoolClass[]);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching data:", error);
-      alert("Gagal memuat data dari database.");
+      alert(`Gagal memuat data dari database: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -165,7 +169,7 @@ const App: React.FC = () => {
     const { error } = await supabase.from('halaqah').insert({
         class_id: classId,
         name: newHalaqah.name,
-        teacher_ids: newHalaqah.teacher_id, // Column name in DB is teacher_ids
+        teacher_id: newHalaqah.teacher_id,
         student_count: newHalaqah.student_count
     });
     if (error) alert(error.message);
@@ -177,7 +181,7 @@ const App: React.FC = () => {
      setIsMutating(true);
      const { error } = await supabase.from('halaqah').update({
         name: updatedHalaqah.name,
-        teacher_ids: updatedHalaqah.teacher_id, // Column name in DB is teacher_ids
+        teacher_id: updatedHalaqah.teacher_id,
         student_count: updatedHalaqah.student_count
      }).eq('id', updatedHalaqah.id);
      if (error) alert(error.message);
@@ -198,7 +202,6 @@ const App: React.FC = () => {
   // User/Teacher CRUD
   const handleAddUser = async (newUser: Omit<User, 'id'>) => {
     setIsMutating(true);
-    // In a real app, you should use Supabase Auth to create users securely.
     const { error } = await supabase.from('guru').insert(newUser);
     if (error) alert(error.message);
     await fetchData();
@@ -228,203 +231,92 @@ const App: React.FC = () => {
 
     if (window.confirm('Apakah Anda yakin ingin menghapus data user ini?')) {
         const { error } = await supabase.from('guru').delete().eq('id', userId);
-        if (error) alert(error.message);
+        if (error) {
+            console.error('Error deleting user:', error);
+            alert(`Gagal menghapus user: ${error.message}`);
+        }
         await fetchData();
     }
     setIsMutating(false);
   };
 
   // Report CRUD
-  const handleBulkUpdateReports = async (reportsToUpdate: Record<string, Report>) => {
+  const handleUpdateReport = async (report: Report) => {
     setIsMutating(true);
-    const upsertData = Object.entries(reportsToUpdate).map(([halaqahId, report]) => ({
-      halaqah_id: halaqahId,
-      year: report.year,
-      month: report.month,
-      main_insight: report.main_insight,
-      student_segmentation: report.student_segmentation,
-      identified_challenges: report.identified_challenges,
-      follow_up_recommendations: report.follow_up_recommendations,
-      next_month_target: report.next_month_target,
-      coordinator_notes: report.coordinator_notes,
-      average_attendance: report.average_attendance,
-      fluent_students: report.fluent_students,
-      students_needing_attention: report.students_needing_attention,
-      is_read: report.is_read,
-      follow_up_status: report.follow_up_status,
-      teacher_notes: report.teacher_notes,
-    }));
+    const { id, ...updateData } = report;
 
-    const { error } = await supabase.from('laporan').upsert(upsertData, {
-        onConflict: 'halaqah_id, year, month',
-    });
-    
-    if (error) {
-        alert("Gagal menyimpan laporan: " + error.message);
-    }
-    await fetchData();
-    setIsMutating(false);
-};
+    const allHalaqahs = classes.flatMap(c => c.halaqah);
+    const targetHalaqah = allHalaqahs.find(h => h.id === report.halaqah_id);
 
-const handleUpdateReport = async (updatedReport: Report) => {
-    setIsMutating(true);
-
-    // Find the halaqah to get the teacher_id, which is needed for the composite key
-    let teacher_id: string | undefined;
-    for (const schoolClass of classes) {
-        const halaqah = schoolClass.halaqah.find(h => h.id === updatedReport.halaqah_id);
-        if (halaqah) {
-            teacher_id = halaqah.teacher_id;
-            break;
-        }
-    }
-
-    if (!teacher_id) {
-        alert("Gagal menemukan data pengajar untuk halaqah ini. Laporan tidak dapat disimpan.");
+    if (!targetHalaqah) {
+        alert('Error: Halaqah untuk laporan ini tidak ditemukan.');
         setIsMutating(false);
         return;
     }
 
-    const { id, ...reportData } = updatedReport;
-    
-    const dbReportPayload: any = {
-        halaqah_id: reportData.halaqah_id,
-        teacher_id: teacher_id, // Add teacher_id to payload
-        month: reportData.month,
-        year: reportData.year,
-        main_insight: reportData.main_insight,
-        student_segmentation: reportData.student_segmentation,
-        identified_challenges: reportData.identified_challenges,
-        follow_up_recommendations: reportData.follow_up_recommendations,
-        next_month_target: reportData.next_month_target,
-        coordinator_notes: reportData.coordinator_notes,
-        average_attendance: reportData.average_attendance,
-        fluent_students: reportData.fluent_students,
-        students_needing_attention: reportData.students_needing_attention,
-        is_read: reportData.is_read,
-        follow_up_status: reportData.follow_up_status,
-        teacher_notes: reportData.teacher_notes,
+    const payload = {
+        ...updateData,
+        teacher_id: targetHalaqah.teacher_id,
     };
 
-    // Only include the ID if it's a valid one (for updates). 
-    // Omit for new reports so the DB generates it.
-    if (id) {
-        dbReportPayload.id = id;
+    try {
+        const { error } = await supabase
+            .from('laporan')
+            .upsert(payload, { onConflict: 'halaqah_id,teacher_id,month,year' });
+
+        if (error) throw error;
+        
+    } catch (error: any) {
+        console.error("Error saving report:", error);
+        alert(`Gagal menyimpan laporan: ${error.message}`);
+    } finally {
+        await fetchData();
+        setIsMutating(false);
     }
+  };
 
-    const { error } = await supabase.from('laporan').upsert(dbReportPayload, {
-        onConflict: 'halaqah_id, teacher_id, month, year', // Use the correct composite key
-    });
-
-
-    if (error) {
-        console.error("Supabase upsert error:", error);
-        alert("Gagal memperbarui laporan: " + error.message);
-    }
-    await fetchData();
-    setIsMutating(false);
-};
-
-
-  const filteredClasses = useMemo(() => {
-    if (!currentUser || currentUser.role === 'Koordinator') {
-        return classes;
-    }
-    // Filter for 'Guru'
-    return classes.map(c => ({
-        ...c,
-        halaqah: c.halaqah.filter(h => h.teacher_id === currentUser.id)
-    })).filter(c => c.halaqah.length > 0);
-  }, [classes, currentUser]);
-
+  if (isLoading && !currentUser) {
+    return (
+        <div className="flex items-center justify-center min-h-screen">
+            <Loader/>
+        </div>
+    )
+  }
 
   if (!currentUser) {
     return <Login onLogin={handleLogin} />;
   }
-  
-  const renderContent = () => {
-    if (isLoading) return <Loader />;
-
-    switch(activeView) {
-      case 'Dashboard Guru':
-        return <TeacherDashboard 
-                  currentUser={currentUser}
-                  classes={filteredClasses}
-                  teachers={users}
-                  onUpdateReport={handleUpdateReport}
-                />;
-      case 'Manajemen Guru':
-        return <TeacherManagement
-                teachers={users}
-                classes={classes}
-                onAddTeacher={handleAddUser}
-                onUpdateTeacher={handleUpdateUser}
-                onDeleteTeacher={handleDeleteUser}
-            />;
-      case 'Manajemen Kelas':
-        return <ClassManagement 
-                classes={classes} 
-                onAddClass={handleAddClass}
-                onUpdateClass={handleUpdateClass}
-                onDeleteClass={handleDeleteClass}
-            />;
-      case 'Manajemen Halaqah':
-        return <HalaqahManagement
-                classes={classes}
-                teachers={users}
-                onAddHalaqah={handleAddHalaqah}
-                onUpdateHalaqah={handleUpdateHalaqah}
-                onDeleteHalaqah={handleDeleteHalaqah}
-            />;
-      case 'Input Laporan':
-        // This view is now only for Koordinator
-        return <BulkInput
-          classes={filteredClasses}
-          onUpdateReport={handleUpdateReport}
-        />;
-      case 'Resume Laporan':
-        return <ResumeLaporan 
-            classes={filteredClasses} 
-            teachers={users} 
-            currentUser={currentUser}
-            onUpdateReport={handleUpdateReport}
-        />;
-      case 'Monitoring':
-      default:
-        return <MonitoringDashboard 
-                    classes={filteredClasses} 
-                    teachers={users}
-                    currentUser={currentUser}
-                    onUpdateReport={handleUpdateReport}
-                />;
-    }
-  }
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {isMutating && <Loader />}
+    <div className="flex min-h-screen bg-gray-50">
+      {(isLoading || isMutating) && <Loader />}
       <Sidebar 
         activeView={activeView} 
-        setActiveView={setActiveView}
+        setActiveView={setActiveView} 
         isOpen={isSidebarOpen}
         setIsOpen={setIsSidebarOpen}
         user={currentUser}
         onLogout={handleLogout}
       />
-      <main className="flex-1 sm:ml-72 p-6 lg:p-8 overflow-y-auto">
-         <div className="flex items-center mb-4 sm:hidden">
-            <button 
-              onClick={() => setIsSidebarOpen(true)} 
-              className="p-2 -ml-2 text-gray-600 hover:text-gray-900"
-              aria-label="Open menu"
-            >
-              <MenuIcon className="w-6 h-6" />
-            </button>
-         </div>
-        {renderContent()}
-      </main>
+      <div className="flex-1 flex flex-col sm:ml-72">
+        <header className="sm:hidden p-4 bg-white shadow-md flex justify-between items-center z-20 sticky top-0">
+          <h1 className="text-xl font-bold text-teal-600">{activeView}</h1>
+          <button onClick={() => setIsSidebarOpen(true)}>
+            <MenuIcon className="w-6 h-6" />
+          </button>
+        </header>
+        <main className="flex-1 p-4 sm:p-6">
+          {activeView === 'Dashboard Guru' && <TeacherDashboard currentUser={currentUser} classes={classes} teachers={users} onUpdateReport={handleUpdateReport} />}
+          {activeView === 'Monitoring' && <MonitoringDashboard currentUser={currentUser} classes={classes} teachers={users} onUpdateReport={handleUpdateReport} />}
+          {activeView === 'Resume Laporan' && <ResumeLaporan currentUser={currentUser} classes={classes} teachers={users} onUpdateReport={handleUpdateReport} />}
+          {activeView === 'Input Laporan' && <BulkInput classes={classes} onUpdateReport={handleUpdateReport} />}
+          {activeView === 'Manajemen Kelas' && <ClassManagement classes={classes} onAddClass={handleAddClass} onUpdateClass={handleUpdateClass} onDeleteClass={handleDeleteClass} />}
+          {activeView === 'Manajemen Halaqah' && <HalaqahManagement classes={classes} teachers={users} onAddHalaqah={handleAddHalaqah} onUpdateHalaqah={handleUpdateHalaqah} onDeleteHalaqah={handleDeleteHalaqah} />}
+          {activeView === 'Manajemen Guru' && <TeacherManagement teachers={users} classes={classes} onAddTeacher={handleAddUser} onUpdateTeacher={handleUpdateUser} onDeleteTeacher={handleDeleteUser} />}
+        </main>
+      </div>
     </div>
   );
-}
+};
 
 export default App;
