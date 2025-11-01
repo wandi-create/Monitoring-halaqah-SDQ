@@ -253,10 +253,28 @@ const App: React.FC = () => {
 
 const handleUpdateReport = async (updatedReport: Report) => {
     setIsMutating(true);
+
+    // Find the halaqah to get the teacher_id, which is needed for the composite key
+    let teacher_id: string | undefined;
+    for (const schoolClass of classes) {
+        const halaqah = schoolClass.halaqah.find(h => h.id === updatedReport.halaqah_id);
+        if (halaqah) {
+            teacher_id = halaqah.teacher_id;
+            break;
+        }
+    }
+
+    if (!teacher_id) {
+        alert("Gagal menemukan data pengajar untuk halaqah ini. Laporan tidak dapat disimpan.");
+        setIsMutating(false);
+        return;
+    }
+
     const { id, ...reportData } = updatedReport;
-    const dbReport = {
-        id: id,
+    
+    const dbReportPayload: any = {
         halaqah_id: reportData.halaqah_id,
+        teacher_id: teacher_id, // Add teacher_id to payload
         month: reportData.month,
         year: reportData.year,
         main_insight: reportData.main_insight,
@@ -273,11 +291,19 @@ const handleUpdateReport = async (updatedReport: Report) => {
         teacher_notes: reportData.teacher_notes,
     };
 
-    const { error } = await supabase.from('laporan').upsert(dbReport, {
-        onConflict: 'halaqah_id, year, month',
+    // Only include the ID if it's a valid one (for updates). 
+    // Omit for new reports so the DB generates it.
+    if (id) {
+        dbReportPayload.id = id;
+    }
+
+    const { error } = await supabase.from('laporan').upsert(dbReportPayload, {
+        onConflict: 'halaqah_id, teacher_id, month, year', // Use the correct composite key
     });
 
+
     if (error) {
+        console.error("Supabase upsert error:", error);
         alert("Gagal memperbarui laporan: " + error.message);
     }
     await fetchData();

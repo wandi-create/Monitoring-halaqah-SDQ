@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { SchoolClass, Halaqah, Report, ReportSection } from '../types';
 import { SaveIcon, PlusIcon, TrashIcon } from './Icons';
@@ -11,19 +10,17 @@ interface ReportCardProps {
   months: string[];
 }
 
-// FIX: Use snake_case to match the Report type.
-const BLANK_REPORT_FIELDS: Omit<Report, 'id' | 'halaqah_id' | 'month' | 'year' | 'is_read' | 'follow_up_status' | 'teacher_notes' | 'average_attendance' | 'fluent_students' | 'students_needing_attention'> = {
+// REMOVED coordinator_notes from this object and its type.
+const BLANK_REPORT_FIELDS: Omit<Report, 'id' | 'halaqah_id' | 'month' | 'year' | 'is_read' | 'follow_up_status' | 'teacher_notes' | 'average_attendance' | 'fluent_students' | 'students_needing_attention' | 'coordinator_notes'> = {
   main_insight: [],
   student_segmentation: [],
   identified_challenges: [],
   follow_up_recommendations: [],
   next_month_target: [],
-  coordinator_notes: [],
 };
 
-// FIX: Use snake_case for ReportField type.
-type ReportField = keyof Omit<typeof BLANK_REPORT_FIELDS, 'coordinator_notes'>;
-type AllReportField = keyof typeof BLANK_REPORT_FIELDS;
+// SIMPLIFIED to cover all fields in the new blank object.
+type ReportField = keyof typeof BLANK_REPORT_FIELDS;
 
 
 const normalizeReportField = (fieldData: any, defaultTitle: string): ReportSection[] => {
@@ -57,7 +54,7 @@ const ReportCard: React.FC<ReportCardProps> = ({ schoolClass, halaqah, onSaveRep
       reportValues.identified_challenges = normalizeReportField(existingReport.identified_challenges, 'Tantangan');
       reportValues.follow_up_recommendations = normalizeReportField(existingReport.follow_up_recommendations, 'Rekomendasi');
       reportValues.next_month_target = normalizeReportField(existingReport.next_month_target, 'Target');
-      reportValues.coordinator_notes = normalizeReportField(existingReport.coordinator_notes, 'Catatan Koordinator');
+      // REMOVED population of coordinator_notes
     }
 
     return { 
@@ -83,9 +80,9 @@ const ReportCard: React.FC<ReportCardProps> = ({ schoolClass, halaqah, onSaveRep
     setIsModified(false);
   }, [selectedYear, selectedMonth, halaqah, getReportForDate]);
   
-  const handleSectionChange = (field: AllReportField, sectionId: string, part: 'title' | 'content', value: string) => {
+  const handleSectionChange = (field: ReportField, sectionId: string, part: 'title' | 'content', value: string) => {
     if (!currentReport) return;
-    const sections = currentReport[field];
+    const sections = (currentReport as any)[field] as ReportSection[];
     const updatedSections = sections.map(sec => 
         sec.id === sectionId ? { ...sec, [part]: value } : sec
     );
@@ -93,20 +90,20 @@ const ReportCard: React.FC<ReportCardProps> = ({ schoolClass, halaqah, onSaveRep
     setIsModified(true);
   };
 
-  const handleAddSection = (field: AllReportField, defaultTitle: string) => {
+  const handleAddSection = (field: ReportField, defaultTitle: string) => {
       if (!currentReport) return;
       const newSection: ReportSection = {
           id: `sec-${Date.now()}-${Math.random()}`,
           title: defaultTitle,
           content: '',
       };
-      setCurrentReport(prev => prev ? { ...prev, [field]: [...(prev[field] || []), newSection] } : null);
+      setCurrentReport(prev => prev ? { ...prev, [field]: [...((prev as any)[field] || []), newSection] } : null);
       setIsModified(true);
   };
 
-  const handleRemoveSection = (field: AllReportField, sectionId: string) => {
+  const handleRemoveSection = (field: ReportField, sectionId: string) => {
       if (!currentReport || !window.confirm('Apakah Anda yakin ingin menghapus bagian ini?')) return;
-      setCurrentReport(prev => prev ? { ...prev, [field]: prev[field]?.filter(sec => sec.id !== sectionId)} : null);
+      setCurrentReport(prev => prev ? { ...prev, [field]: (prev as any)[field]?.filter((sec: ReportSection) => sec.id !== sectionId)} : null);
       setIsModified(true);
   };
 
