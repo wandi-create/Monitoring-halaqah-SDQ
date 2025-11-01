@@ -10,13 +10,14 @@ interface ReportCardProps {
   months: string[];
 }
 
-// REMOVED coordinator_notes from this object and its type.
-const BLANK_REPORT_FIELDS: Omit<Report, 'id' | 'halaqah_id' | 'month' | 'year' | 'is_read' | 'follow_up_status' | 'teacher_notes' | 'average_attendance' | 'fluent_students' | 'students_needing_attention' | 'coordinator_notes'> = {
+// UPDATED to include coordinator_notes and adjust Omit<>
+const BLANK_REPORT_FIELDS: Omit<Report, 'id' | 'halaqah_id' | 'month' | 'year' | 'is_read' | 'follow_up_status' | 'teacher_notes' | 'average_attendance' | 'fluent_students' | 'students_needing_attention'> = {
   main_insight: [],
   student_segmentation: [],
   identified_challenges: [],
   follow_up_recommendations: [],
   next_month_target: [],
+  coordinator_notes: [],
 };
 
 // SIMPLIFIED to cover all fields in the new blank object.
@@ -42,37 +43,31 @@ const ReportCard: React.FC<ReportCardProps> = ({ schoolClass, halaqah, onSaveRep
   const [showSuccess, setShowSuccess] = useState(false);
 
   const getReportForDate = useCallback((year: number, month: number): Report => {
-    // FIX: Find report by year and month, as ID is a UUID.
-    // FIX: Property 'reports' does not exist on type 'Halaqah'. Use 'laporan' instead.
     const existingReport = halaqah.laporan.find(r => r.year === year && r.month === month);
     
     const reportValues = { ...BLANK_REPORT_FIELDS };
     if (existingReport) {
-      // FIX: Use snake_case properties
       reportValues.main_insight = normalizeReportField(existingReport.main_insight, 'Insight Utama');
       reportValues.student_segmentation = normalizeReportField(existingReport.student_segmentation, 'Segmentasi Murid');
       reportValues.identified_challenges = normalizeReportField(existingReport.identified_challenges, 'Tantangan');
       reportValues.follow_up_recommendations = normalizeReportField(existingReport.follow_up_recommendations, 'Rekomendasi');
       reportValues.next_month_target = normalizeReportField(existingReport.next_month_target, 'Target');
-      // REMOVED population of coordinator_notes
+      reportValues.coordinator_notes = normalizeReportField(existingReport.coordinator_notes, 'Catatan Koordinator');
     }
 
     return { 
-        ...reportValues, 
-        // FIX: Use existing report ID or an empty string for new reports.
+        ...reportValues,
         id: existingReport?.id || '', 
         halaqah_id: halaqah.id,
         year, 
         month,
-        average_attendance: existingReport?.average_attendance || undefined,
-        fluent_students: existingReport?.fluent_students || undefined,
-        students_needing_attention: existingReport?.students_needing_attention || undefined,
-        // FIX: Use snake_case properties
+        average_attendance: existingReport?.average_attendance || 0,
+        fluent_students: existingReport?.fluent_students || 0,
+        students_needing_attention: existingReport?.students_needing_attention || 0,
         is_read: existingReport?.is_read || false,
         follow_up_status: existingReport?.follow_up_status || 'Belum Dimulai',
         teacher_notes: existingReport?.teacher_notes || '',
     };
-    // FIX: Property 'reports' does not exist on type 'Halaqah'. Use 'laporan' instead.
   }, [halaqah.laporan, halaqah.id]);
 
   useEffect(() => {

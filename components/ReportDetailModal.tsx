@@ -137,15 +137,15 @@ const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ report, onClose, 
                     <div className="grid grid-cols-3 gap-4 text-center">
                         <div className="bg-white p-4 rounded-lg border">
                             <p className="text-sm text-gray-500">Kehadiran Rata-rata</p>
-                            <p className="text-2xl font-bold text-teal-600">{(report.average_attendance ?? 0)}%</p>
+                            <p className="text-2xl font-bold text-teal-600">{report.average_attendance}%</p>
                         </div>
                         <div className="bg-white p-4 rounded-lg border">
                             <p className="text-sm text-gray-500">Murid Lancar</p>
-                            <p className="text-2xl font-bold text-teal-600">{report.fluent_students ?? 0}</p>
+                            <p className="text-2xl font-bold text-teal-600">{report.fluent_students}</p>
                         </div>
                         <div className="bg-white p-4 rounded-lg border">
                             <p className="text-sm text-gray-500">Murid Perlu Perhatian</p>
-                            <p className="text-2xl font-bold text-teal-600">{report.students_needing_attention ?? 0}</p>
+                            <p className="text-2xl font-bold text-teal-600">{report.students_needing_attention}</p>
                         </div>
                     </div>
 

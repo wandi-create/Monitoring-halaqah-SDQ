@@ -65,11 +65,26 @@ const App: React.FC = () => {
           ...c,
           halaqah: (c.halaqah || []).map(h => ({
               ...h,
-              // Map the 'teacher_ids' column from Supabase (which holds a single ID)
-              // to the 'teacher_id' property expected by the frontend.
-              // Convert to string and handle null/undefined values.
               teacher_id: String(h.teacher_ids || ''),
-              laporan: h.laporan || []
+              // Deep map reports to ensure data integrity and provide safe defaults, preventing crashes from null values.
+              laporan: (h.laporan || []).map((r: any): Report => ({
+                id: r.id,
+                halaqah_id: r.halaqah_id,
+                month: r.month || 0,
+                year: r.year || 0,
+                main_insight: r.main_insight || [],
+                student_segmentation: r.student_segmentation || [],
+                identified_challenges: r.identified_challenges || [],
+                follow_up_recommendations: r.follow_up_recommendations || [],
+                next_month_target: r.next_month_target || [],
+                coordinator_notes: r.coordinator_notes || [],
+                average_attendance: r.average_attendance ?? 0,
+                fluent_students: r.fluent_students ?? 0,
+                students_needing_attention: r.students_needing_attention ?? 0,
+                is_read: r.is_read || false,
+                follow_up_status: r.follow_up_status || 'Belum Dimulai',
+                teacher_notes: r.teacher_notes || '',
+              }))
           }))
       }));
       
