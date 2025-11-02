@@ -12,12 +12,11 @@ type ExtendedReport = Report & {
 
 interface MonitoringDashboardProps {
   classes: SchoolClass[];
-  teachers: User[];
   currentUser: User;
   onUpdateReport: (report: Report) => Promise<void>;
 }
 
-const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ classes, teachers, currentUser, onUpdateReport }) => {
+const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ classes, currentUser, onUpdateReport }) => {
   const [activeTab, setActiveTab] = useState<'Ikhwan' | 'Akhwat'>('Ikhwan');
   const [selectedReport, setSelectedReport] = useState<ExtendedReport | null>(null);
 
@@ -26,16 +25,12 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ classes, teac
 
   const displayedClasses = activeTab === 'Ikhwan' ? ikhwanClasses : akhwatClasses;
   
-  const getTeacherName = (teacherId: string): string => {
-      return teachers.find(t => String(t.id) === String(teacherId))?.name || 'N/A';
-  }
-
   const handleViewReport = (report: Report, halaqah: Halaqah, schoolClass: SchoolClass) => {
     const extendedReport: ExtendedReport = {
         ...report,
         halaqahName: halaqah.name,
         className: schoolClass.name,
-        teacherName: getTeacherName(halaqah.teacher_id)
+        teacherName: halaqah.guru?.name || 'N/A'
     };
     setSelectedReport(extendedReport);
   };
@@ -97,7 +92,7 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ classes, teac
                     <div className="flex justify-between items-center">
                       <div>
                         <h3 className="font-semibold text-gray-700">{halaqah.name}</h3>
-                        <p className="text-xs text-gray-500 leading-tight mt-1">{getTeacherName(halaqah.teacher_id)}</p>
+                        <p className="text-xs text-gray-500 leading-tight mt-1">{halaqah.guru?.name || 'N/A'}</p>
                       </div>
                       <div className="flex items-center space-x-2">
                         {currentReport ? (

@@ -8,7 +8,6 @@ import ReportDetailModal from './ReportDetailModal';
 interface TeacherDashboardProps {
   currentUser: User;
   classes: SchoolClass[];
-  teachers: User[];
   onUpdateReport: (report: Report) => Promise<void>;
 }
 
@@ -36,7 +35,7 @@ const StatCard: React.FC<{ icon: React.ReactNode; title: string; value: string |
 );
 
 
-const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ currentUser, classes, teachers, onUpdateReport }) => {
+const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ currentUser, classes, onUpdateReport }) => {
     const [selectedReportForDetail, setSelectedReportForDetail] = useState<ExtendedReport | null>(null);
 
     const date = new Date();
@@ -61,7 +60,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ currentUser, classe
             ...report,
             halaqahName: halaqah.name,
             className: halaqah.className,
-            teacherName: teachers.find(t => String(t.id) === String(halaqah.teacher_id))?.name || 'N/A'
+            teacherName: halaqah.guru?.name || 'N/A'
         });
     }
 

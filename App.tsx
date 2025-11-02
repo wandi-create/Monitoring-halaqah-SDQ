@@ -55,6 +55,7 @@ const App: React.FC = () => {
           *,
           halaqah (
             *,
+            guru(*),
             laporan(*)
           )
         `)
@@ -306,9 +307,9 @@ const App: React.FC = () => {
           </button>
         </header>
         <main className="flex-1 p-4 sm:p-6">
-          {activeView === 'Dashboard Guru' && <TeacherDashboard currentUser={currentUser} classes={classes} teachers={users} onUpdateReport={handleUpdateReport} />}
-          {activeView === 'Monitoring' && <MonitoringDashboard currentUser={currentUser} classes={classes} teachers={users} onUpdateReport={handleUpdateReport} />}
-          {activeView === 'Resume Laporan' && <ResumeLaporan currentUser={currentUser} classes={classes} teachers={users} onUpdateReport={handleUpdateReport} />}
+          {activeView === 'Dashboard Guru' && <TeacherDashboard currentUser={currentUser} classes={classes} onUpdateReport={handleUpdateReport} />}
+          {activeView === 'Monitoring' && <MonitoringDashboard currentUser={currentUser} classes={classes} onUpdateReport={handleUpdateReport} />}
+          {activeView === 'Resume Laporan' && <ResumeLaporan currentUser={currentUser} classes={classes} onUpdateReport={handleUpdateReport} />}
           {activeView === 'Input Laporan' && <BulkInput classes={classes} onUpdateReport={handleUpdateReport} />}
           {activeView === 'Manajemen Kelas' && <ClassManagement classes={classes} onAddClass={handleAddClass} onUpdateClass={handleUpdateClass} onDeleteClass={handleDeleteClass} />}
           {activeView === 'Manajemen Halaqah' && <HalaqahManagement classes={classes} teachers={users} onAddHalaqah={handleAddHalaqah} onUpdateHalaqah={handleUpdateHalaqah} onDeleteHalaqah={handleDeleteHalaqah} />}

@@ -38,6 +38,7 @@ export interface Halaqah {
   id: string; // uuid
   name: string;
   teacher_id: string; // uuid of a single teacher
+  guru?: User;
   student_count: number;
   class_id: string; // Foreign key to SchoolClass
   laporan: Report[]; // Renamed from 'reports' to match Supabase table name

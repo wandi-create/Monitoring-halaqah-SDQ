@@ -17,7 +17,6 @@ type ExtendedReport = Report & {
 
 interface ResumeLaporanProps {
   classes: SchoolClass[];
-  teachers: User[];
   currentUser: User;
   onUpdateReport: (report: Report) => Promise<void>;
 }
@@ -44,7 +43,7 @@ const FollowUpStatusPill: React.FC<{ status: FollowUpStatus }> = ({ status }) =>
 };
 
 
-const ResumeLaporan: React.FC<ResumeLaporanProps> = ({ classes, teachers, currentUser, onUpdateReport }) => {
+const ResumeLaporan: React.FC<ResumeLaporanProps> = ({ classes, currentUser, onUpdateReport }) => {
   const currentYear = new Date().getFullYear();
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [selectedYear, setSelectedYear] = useState<string>('all');
@@ -67,7 +66,7 @@ const ResumeLaporan: React.FC<ResumeLaporanProps> = ({ classes, teachers, curren
           ...report,
           halaqahName: halaqah.name,
           className: schoolClass.name,
-          teacherName: teachers.find(t => String(t.id) === String(halaqah.teacher_id))?.name || 'N/A'
+          teacherName: halaqah.guru?.name || 'N/A'
         }))
       )
     )
@@ -76,7 +75,7 @@ const ResumeLaporan: React.FC<ResumeLaporanProps> = ({ classes, teachers, curren
       (selectedYear === 'all' || report.year === parseInt(selectedYear))
     )
     .sort((a, b) => new Date(b.year, b.month - 1).getTime() - new Date(a.year, a.month - 1).getTime());
-  }, [classes, teachers, selectedMonth, selectedYear]);
+  }, [classes, selectedMonth, selectedYear]);
 
   return (
     <>

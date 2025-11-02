@@ -131,8 +131,6 @@ const HalaqahManagement: React.FC<HalaqahManagementProps> = ({ classes, teachers
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingData, setEditingData] = useState<{ halaqah: Halaqah | null, classId: string | null }>({ halaqah: null, classId: null });
     
-    const getTeacherName = (id: string) => teachers.find(t => String(t.id) === String(id))?.name || 'N/A';
-
     const handleOpenAddModal = () => {
         setEditingData({ halaqah: null, classId: null });
         setIsModalOpen(true);
@@ -189,7 +187,7 @@ const HalaqahManagement: React.FC<HalaqahManagementProps> = ({ classes, teachers
                                             </th>
                                             <td className="px-6 py-4">{halaqah.student_count}</td>
                                             <td className="px-6 py-4">
-                                                {getTeacherName(halaqah.teacher_id)}
+                                                {halaqah.guru?.name || 'N/A'}
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <button onClick={() => handleOpenEditModal(schoolClass.id, halaqah)} className="p-2 text-yellow-500 hover:text-yellow-700">
