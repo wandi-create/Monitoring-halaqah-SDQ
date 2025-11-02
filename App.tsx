@@ -39,6 +39,8 @@ const App: React.FC = () => {
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
+      // Step 1: Fetch all users and classes/halaqahs as a base.
+      // Users are needed for coordinators to manage teachers.
       const { data: usersData, error: usersError } = await supabase.from('guru').select('*');
       if (usersError) throw usersError;
       setUsers(usersData as User[]);
@@ -50,7 +52,6 @@ const App: React.FC = () => {
         }
       }
 
-      // Step 1: Fetch classes and halaqahs, but NOT reports
       const { data: classesData, error: classesError } = await supabase
         .from('kelas')
         .select(`
@@ -64,31 +65,45 @@ const App: React.FC = () => {
         
       if (classesError) throw classesError;
 
-      // Step 2: Fetch reports separately. Filter for Guru, get all for Koordinator.
+      // Step 2: Fetch reports separately. Filter at the database level for 'Guru'.
       let reportsData: any[] = [];
       if (currentUser) {
         if (currentUser.role === 'Guru') {
-          // LAPIS 1: Keamanan Nilai - Pastikan user ID ada
           if (currentUser.id) {
-            // Buat Variabel Konversi Wajib
-            const teacherIdAsNumber = Number(currentUser.id);
+            // FIXED: The user ID is a string (UUID) and must not be converted to a Number.
+            // This ensures the database filter works correctly.
             const { data, error } = await supabase
               .from('laporan')
               .select('*')
-              // GUNAKAN VARIABEL YANG SUDAH DICONVERT
-              .eq('teacher_id', teacherIdAsNumber);
+              .eq('teacher_id', currentUser.id); // Use string ID directly
             if (error) throw error;
             reportsData = data || [];
           }
-        } else { // Koordinator gets all reports
+        } else { // 'Koordinator' gets all reports
           const { data, error } = await supabase.from('laporan').select('*');
           if (error) throw error;
           reportsData = data || [];
         }
       }
       
-      // Step 3: Manually merge reports into their corresponding halaqah
-      const classesWithReports = classesData.map(c => ({
+      let processedData = classesData;
+      // Step 3: Apply application-side filtering for 'Guru' role.
+      if (currentUser && currentUser.role === 'Guru') {
+        const currentUserId = currentUser.id;
+        processedData = classesData
+          .map(schoolClass => {
+            // Filter halaqahs to only include those belonging to the current teacher
+            const halaqahsForTeacher = (schoolClass.halaqah || []).filter(
+              (halaqah: any) => halaqah.teacher_id === currentUserId
+            );
+            return { ...schoolClass, halaqah: halaqahsForTeacher };
+          })
+          // Filter classes to only include those that still have halaqahs after filtering
+          .filter(schoolClass => schoolClass.halaqah.length > 0);
+      }
+      
+      // Step 4: Manually merge the correctly fetched reports into the (now filtered) halaqahs.
+      const classesWithReports = processedData.map(c => ({
         ...c,
         halaqah: (c.halaqah || []).map((h: any) => ({
           ...h,
@@ -96,22 +111,8 @@ const App: React.FC = () => {
         }))
       }));
       
-      let processedData = classesWithReports;
-      if (currentUser && currentUser.role === 'Guru') {
-        const currentUserId = currentUser.id;
-        
-        // Step 4: Filter classes and halaqahs for the current teacher
-        processedData = classesWithReports
-          .map(schoolClass => {
-            const halaqahsForTeacher = (schoolClass.halaqah || []).filter(
-              (halaqah: any) => halaqah.teacher_id === currentUserId
-            );
-            return { ...schoolClass, halaqah: halaqahsForTeacher };
-          })
-          .filter(schoolClass => schoolClass.halaqah.length > 0);
-      }
-
-      const formattedClasses = processedData.map(c => ({
+      // Step 5: Format the final data structure for the application state.
+      const formattedClasses = classesWithReports.map(c => ({
           ...c,
           halaqah: (c.halaqah || []).map((h: any) => {
             const reportsArray = Array.isArray(h.laporan) ? h.laporan : (h.laporan ? [h.laporan] : []);
@@ -150,6 +151,7 @@ const App: React.FC = () => {
       setIsLoading(false);
     }
   }, [currentUser]);
+
 
   useEffect(() => {
     if (currentUser) {
