@@ -309,7 +309,7 @@ const App: React.FC = () => {
     try {
         const { error } = await supabase
             .from('laporan')
-            .upsert(payload, { onConflict: 'halaqah_id,month,year' }); // Adjusted onConflict
+            .upsert(payload, { onConflict: 'halaqah_id,teacher_id,month,year' }); // MUTLAK: onConflict menargetkan 4 kolom
 
         if (error) throw error;
         
