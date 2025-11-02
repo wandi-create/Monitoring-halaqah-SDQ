@@ -108,7 +108,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </div>
         </form>
          <div className="text-center text-xs text-gray-400">
-          <p>Sistem Monitoring Bulanan © 2025 SDQ Mutiara Sunnah</p>
+          <p>Sistem Monitoring Halaqah © 2025 SDQ Mutiara Sunnah</p>
         </div>
       </div>
     </div>
