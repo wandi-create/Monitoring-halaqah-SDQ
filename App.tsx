@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from './lib/supabaseClient';
 import { SchoolClass, Halaqah, Report, User } from './types';
@@ -127,9 +126,6 @@ const App: React.FC = () => {
               follow_up_recommendations: r.follow_up_recommendations || [],
               next_month_target: r.next_month_target || [],
               coordinator_notes: r.coordinator_notes || [],
-              average_attendance: r.average_attendance ?? 0,
-              fluent_students: r.fluent_students ?? 0,
-              students_needing_attention: r.students_needing_attention ?? 0,
               is_read: r.is_read || false,
               follow_up_status: r.follow_up_status || 'Belum Dimulai',
               teacher_notes: r.teacher_notes || '',

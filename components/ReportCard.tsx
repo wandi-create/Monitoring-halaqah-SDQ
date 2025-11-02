@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { SchoolClass, Halaqah, Report, ReportSection } from '../types';
 import { SaveIcon, PlusIcon, TrashIcon } from './Icons';
@@ -11,7 +10,7 @@ interface ReportCardProps {
 }
 
 // UPDATED to include coordinator_notes and adjust Omit<>
-const BLANK_REPORT_FIELDS: Omit<Report, 'id' | 'halaqah_id' | 'month' | 'year' | 'is_read' | 'follow_up_status' | 'teacher_notes' | 'average_attendance' | 'fluent_students' | 'students_needing_attention'> = {
+const BLANK_REPORT_FIELDS: Omit<Report, 'id' | 'halaqah_id' | 'month' | 'year' | 'is_read' | 'follow_up_status' | 'teacher_notes'> = {
   main_insight: [],
   student_segmentation: [],
   identified_challenges: [],
@@ -61,9 +60,6 @@ const ReportCard: React.FC<ReportCardProps> = ({ schoolClass, halaqah, onSaveRep
         halaqah_id: halaqah.id,
         year, 
         month,
-        average_attendance: existingReport?.average_attendance || 0,
-        fluent_students: existingReport?.fluent_students || 0,
-        students_needing_attention: existingReport?.students_needing_attention || 0,
         is_read: existingReport?.is_read || false,
         follow_up_status: existingReport?.follow_up_status || 'Belum Dimulai',
         teacher_notes: existingReport?.teacher_notes || '',
