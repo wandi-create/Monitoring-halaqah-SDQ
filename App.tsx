@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from './lib/supabaseClient';
 import { SchoolClass, Halaqah, Report, User } from './types';
@@ -49,21 +50,68 @@ const App: React.FC = () => {
         }
       }
 
+      // Step 1: Fetch classes and halaqahs, but NOT reports
       const { data: classesData, error: classesError } = await supabase
         .from('kelas')
         .select(`
           *,
           halaqah (
             *,
-            guru(*),
-            laporan(*)
+            guru(*)
           )
         `)
         .order('name', { ascending: true });
         
       if (classesError) throw classesError;
+
+      // Step 2: Fetch reports separately. Filter for Guru, get all for Koordinator.
+      let reportsData: any[] = [];
+      if (currentUser) {
+        if (currentUser.role === 'Guru') {
+          // LAPIS 1: Keamanan Nilai - Pastikan user ID ada
+          if (currentUser.id) {
+            // Buat Variabel Konversi Wajib
+            const teacherIdAsNumber = Number(currentUser.id);
+            const { data, error } = await supabase
+              .from('laporan')
+              .select('*')
+              // GUNAKAN VARIABEL YANG SUDAH DICONVERT
+              .eq('teacher_id', teacherIdAsNumber);
+            if (error) throw error;
+            reportsData = data || [];
+          }
+        } else { // Koordinator gets all reports
+          const { data, error } = await supabase.from('laporan').select('*');
+          if (error) throw error;
+          reportsData = data || [];
+        }
+      }
       
-      const formattedClasses = classesData.map(c => ({
+      // Step 3: Manually merge reports into their corresponding halaqah
+      const classesWithReports = classesData.map(c => ({
+        ...c,
+        halaqah: (c.halaqah || []).map((h: any) => ({
+          ...h,
+          laporan: reportsData.filter(r => r.halaqah_id === h.id)
+        }))
+      }));
+      
+      let processedData = classesWithReports;
+      if (currentUser && currentUser.role === 'Guru') {
+        const currentUserId = currentUser.id;
+        
+        // Step 4: Filter classes and halaqahs for the current teacher
+        processedData = classesWithReports
+          .map(schoolClass => {
+            const halaqahsForTeacher = (schoolClass.halaqah || []).filter(
+              (halaqah: any) => halaqah.teacher_id === currentUserId
+            );
+            return { ...schoolClass, halaqah: halaqahsForTeacher };
+          })
+          .filter(schoolClass => schoolClass.halaqah.length > 0);
+      }
+
+      const formattedClasses = processedData.map(c => ({
           ...c,
           halaqah: (c.halaqah || []).map((h: any) => {
             const reportsArray = Array.isArray(h.laporan) ? h.laporan : (h.laporan ? [h.laporan] : []);
@@ -250,20 +298,20 @@ const App: React.FC = () => {
     const targetHalaqah = allHalaqahs.find(h => h.id === report.halaqah_id);
 
     if (!targetHalaqah) {
-        alert('Error: Halaqah untuk laporan ini tidak ditemukan.');
-        setIsMutating(false);
-        return;
+        // This case might happen if data is stale, fetchData will resolve it
+        console.warn('Could not find halaqah for report in current state, fetching latest data.');
     }
-
+    
+    // Always attach teacher_id from the halaqah to the report payload for consistency
     const payload = {
         ...updateData,
-        teacher_id: targetHalaqah.teacher_id,
+        teacher_id: targetHalaqah?.teacher_id || currentUser?.id,
     };
 
     try {
         const { error } = await supabase
             .from('laporan')
-            .upsert(payload, { onConflict: 'halaqah_id,teacher_id,month,year' });
+            .upsert(payload, { onConflict: 'halaqah_id,month,year' }); // Adjusted onConflict
 
         if (error) throw error;
         
@@ -275,6 +323,7 @@ const App: React.FC = () => {
         setIsMutating(false);
     }
   };
+
 
   if (isLoading && !currentUser) {
     return (
