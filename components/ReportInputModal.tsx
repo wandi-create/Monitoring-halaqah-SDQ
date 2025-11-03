@@ -10,9 +10,11 @@ interface ReportInputModalProps {
   halaqah: Halaqah | null;
   schoolClass: SchoolClass | null;
   onSaveReport: (report: Report) => Promise<void>;
+  initialYear?: number;
+  initialMonth?: number;
 }
 
-const ReportInputModal: React.FC<ReportInputModalProps> = ({ isOpen, onClose, halaqah, schoolClass, onSaveReport }) => {
+const ReportInputModal: React.FC<ReportInputModalProps> = ({ isOpen, onClose, halaqah, schoolClass, onSaveReport, initialYear, initialMonth }) => {
     if (!isOpen || !halaqah || !schoolClass) return null;
 
     const handleSave = async (classId: string, halaqahId: string, report: Report) => {
@@ -38,6 +40,8 @@ const ReportInputModal: React.FC<ReportInputModalProps> = ({ isOpen, onClose, ha
                         halaqah={halaqah}
                         onSaveReport={handleSave}
                         months={MONTHS}
+                        initialYear={initialYear}
+                        initialMonth={initialMonth}
                     />
                 </main>
             </div>

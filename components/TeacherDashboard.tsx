@@ -38,9 +38,17 @@ const StatCard: React.FC<{ icon: React.ReactNode; title: string; value: string |
 const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ currentUser, classes, onUpdateReport }) => {
     const [selectedReportForDetail, setSelectedReportForDetail] = useState<ExtendedReport | null>(null);
 
-    const date = new Date();
-    const currentMonth = date.getMonth() + 1;
-    const currentYear = date.getFullYear();
+    const getPreviousMonthAndYear = () => {
+        const date = new Date();
+        date.setMonth(date.getMonth() - 1);
+        return {
+            year: date.getFullYear(),
+            month: date.getMonth() + 1,
+        };
+    };
+
+    const { year: currentYear, month: currentMonth } = getPreviousMonthAndYear();
+
 
     const allHalaqahs: ExtendedHalaqah[] = useMemo(() => 
         classes.flatMap(c => c.halaqah.map(h => ({ ...h, className: c.name, classId: c.id } as ExtendedHalaqah)))

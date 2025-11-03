@@ -10,8 +10,19 @@ interface BulkInputProps {
 }
 
 const BulkInput: React.FC<BulkInputProps> = ({ classes, onUpdateReport }) => {
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const getPreviousMonthAndYear = () => {
+    const date = new Date();
+    date.setMonth(date.getMonth() - 1);
+    return {
+        year: date.getFullYear(),
+        month: date.getMonth() + 1,
+    };
+  };
+
+  const { year: defaultYear, month: defaultMonth } = getPreviousMonthAndYear();
+
+  const [selectedYear, setSelectedYear] = useState(defaultYear);
+  const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{ halaqah: Halaqah; schoolClass: SchoolClass } | null>(null);
@@ -113,6 +124,8 @@ const BulkInput: React.FC<BulkInputProps> = ({ classes, onUpdateReport }) => {
           halaqah={selectedItem.halaqah}
           schoolClass={selectedItem.schoolClass}
           onSaveReport={onUpdateReport}
+          initialYear={selectedYear}
+          initialMonth={selectedMonth}
         />
       )}
     </>

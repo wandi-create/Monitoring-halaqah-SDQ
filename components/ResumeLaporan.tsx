@@ -44,19 +44,30 @@ const FollowUpStatusPill: React.FC<{ status: FollowUpStatus }> = ({ status }) =>
 
 
 const ResumeLaporan: React.FC<ResumeLaporanProps> = ({ classes, currentUser, onUpdateReport }) => {
-  const currentYear = new Date().getFullYear();
-  const [selectedMonth, setSelectedMonth] = useState<string>('all');
-  const [selectedYear, setSelectedYear] = useState<string>('all');
+  const getPreviousMonthAndYear = () => {
+    const date = new Date();
+    date.setMonth(date.getMonth() - 1);
+    return {
+        year: date.getFullYear(),
+        month: date.getMonth() + 1,
+    };
+  };
+
+  const { year: defaultYear, month: defaultMonth } = getPreviousMonthAndYear();
+
+  const [selectedMonth, setSelectedMonth] = useState<string>(String(defaultMonth));
+  const [selectedYear, setSelectedYear] = useState<string>(String(defaultYear));
   const [selectedReport, setSelectedReport] = useState<ExtendedReport | null>(null);
   
   const years = useMemo(() => {
+    const currentYear = new Date().getFullYear();
     const allYears = new Set<number>();
     classes.forEach(c => c.halaqah.forEach(h => h.laporan?.forEach(r => allYears.add(r.year))));
     if (!allYears.has(currentYear)) {
       allYears.add(currentYear);
     }
     return Array.from(allYears).sort((a, b) => b - a);
-  }, [classes, currentYear]);
+  }, [classes]);
 
 
   const filteredReports = useMemo((): ExtendedReport[] => {

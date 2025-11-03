@@ -7,6 +7,8 @@ interface ReportCardProps {
   halaqah: Halaqah;
   onSaveReport: (classId: string, halaqahId: string, report: Report) => void;
   months: string[];
+  initialYear?: number;
+  initialMonth?: number;
 }
 
 // UPDATED to include coordinator_notes and adjust Omit<>
@@ -34,9 +36,20 @@ const normalizeReportField = (fieldData: any, defaultTitle: string): ReportSecti
 };
 
 
-const ReportCard: React.FC<ReportCardProps> = ({ schoolClass, halaqah, onSaveReport, months }) => {
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+const ReportCard: React.FC<ReportCardProps> = ({ schoolClass, halaqah, onSaveReport, months, initialYear, initialMonth }) => {
+  const getPreviousMonthAndYear = () => {
+      const date = new Date();
+      date.setMonth(date.getMonth() - 1);
+      return {
+          year: date.getFullYear(),
+          month: date.getMonth() + 1,
+      };
+  };
+
+  const { year: defaultYear, month: defaultMonth } = getPreviousMonthAndYear();
+
+  const [selectedYear, setSelectedYear] = useState(initialYear !== undefined ? initialYear : defaultYear);
+  const [selectedMonth, setSelectedMonth] = useState(initialMonth !== undefined ? initialMonth : defaultMonth);
   const [currentReport, setCurrentReport] = useState<Report | null>(null);
   const [isModified, setIsModified] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
