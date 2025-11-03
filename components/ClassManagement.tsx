@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SchoolClass } from '../types';
+import { SchoolClass, User } from '../types';
 import { PlusIcon, PencilIcon, TrashIcon, CloseIcon, SaveIcon, ArrowUturnLeftIcon } from './Icons';
 
 interface ClassManagementProps {
@@ -7,6 +7,7 @@ interface ClassManagementProps {
   onAddClass: (newClass: Omit<SchoolClass, 'id' | 'halaqah'>) => Promise<void>;
   onUpdateClass: (updatedClass: SchoolClass) => Promise<void>;
   onDeleteClass: (classId: string) => Promise<void>;
+  currentUser: User;
 }
 
 const ClassFormModal: React.FC<{
@@ -91,9 +92,10 @@ const ClassFormModal: React.FC<{
     );
 };
 
-const ClassManagement: React.FC<ClassManagementProps> = ({ classes, onAddClass, onUpdateClass, onDeleteClass }) => {
+const ClassManagement: React.FC<ClassManagementProps> = ({ classes, onAddClass, onUpdateClass, onDeleteClass, currentUser }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingClass, setEditingClass] = useState<SchoolClass | null>(null);
+    const isReadOnly = currentUser.role === 'Kepala Sekolah';
 
     const handleOpenAddModal = () => {
         setEditingClass(null);
@@ -120,10 +122,12 @@ const ClassManagement: React.FC<ClassManagementProps> = ({ classes, onAddClass, 
             <h1 className="text-3xl font-bold text-teal-600">Manajemen Kelas</h1>
             <p className="text-gray-500 mt-1">Tambah, edit, atau hapus data kelas</p>
         </div>
-        <button onClick={handleOpenAddModal} className="bg-teal-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-600 transition-all flex items-center gap-2 shadow-md">
-            <PlusIcon className="w-5 h-5"/>
-            Tambah Kelas Baru
-        </button>
+        {!isReadOnly && (
+            <button onClick={handleOpenAddModal} className="bg-teal-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-600 transition-all flex items-center gap-2 shadow-md">
+                <PlusIcon className="w-5 h-5"/>
+                Tambah Kelas Baru
+            </button>
+        )}
       </header>
       
       <div className="bg-white rounded-xl shadow-md p-5 border border-gray-200/80">
@@ -151,12 +155,14 @@ const ClassManagement: React.FC<ClassManagementProps> = ({ classes, onAddClass, 
                             </td>
                             <td className="px-6 py-4">{schoolClass.halaqah.length}</td>
                             <td className="px-6 py-4 text-right">
-                                <button onClick={() => handleOpenEditModal(schoolClass)} className="p-2 text-yellow-500 hover:text-yellow-700">
-                                    <PencilIcon className="w-5 h-5" />
-                                </button>
-                                <button onClick={() => onDeleteClass(schoolClass.id)} className="p-2 text-red-500 hover:text-red-700">
-                                    <TrashIcon className="w-5 h-5" />
-                                </button>
+                                {!isReadOnly && (<>
+                                    <button onClick={() => handleOpenEditModal(schoolClass)} className="p-2 text-yellow-500 hover:text-yellow-700">
+                                        <PencilIcon className="w-5 h-5" />
+                                    </button>
+                                    <button onClick={() => onDeleteClass(schoolClass.id)} className="p-2 text-red-500 hover:text-red-700">
+                                        <TrashIcon className="w-5 h-5" />
+                                    </button>
+                                </>)}
                             </td>
                         </tr>
                     ))}

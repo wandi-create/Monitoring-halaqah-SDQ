@@ -3,7 +3,7 @@ export interface User {
   name: string;
   email: string;
   password?: string; // This should be handled securely, not stored as plain text
-  role: 'Koordinator' | 'Guru';
+  role: 'Koordinator' | 'Guru' | 'Kepala Sekolah';
   gender: 'Ikhwan' | 'Akhwat';
 }
 

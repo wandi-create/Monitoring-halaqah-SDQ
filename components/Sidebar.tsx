@@ -58,14 +58,14 @@ const Sidebar: React.FC<SidebarProps> = ({
     selectedMonth,
     setSelectedMonth
 }) => {
-  const allNavItems: { id: View; icon: React.ReactNode; title: string; subtitle: string; roles: ('Koordinator' | 'Guru')[]; }[] = [
+  const allNavItems: { id: View; icon: React.ReactNode; title: string; subtitle: string; roles: ('Koordinator' | 'Guru' | 'Kepala Sekolah')[]; }[] = [
     { id: 'Dashboard Guru', icon: <CheckCircleIcon className="w-5 h-5"/>, title: "Dashboard", subtitle: "Tugas & Laporan Anda", roles: ['Guru'] },
-    { id: 'Monitoring', icon: <BookOpenIcon className="w-5 h-5"/>, title: "Monitoring", subtitle: "Lihat monitoring halaqah", roles: ['Koordinator'] },
+    { id: 'Monitoring', icon: <BookOpenIcon className="w-5 h-5"/>, title: "Monitoring", subtitle: "Lihat monitoring halaqah", roles: ['Koordinator', 'Kepala Sekolah'] },
     { id: 'Input Laporan', icon: <BulkInputIcon className="w-5 h-5"/>, title: "Input Laporan", subtitle: "Input laporan massal", roles: ['Koordinator'] },
-    { id: 'Resume Laporan', icon: <ReportIcon className="w-5 h-5"/>, title: "Resume Laporan", subtitle: "Ringkasan laporan bulanan", roles: ['Koordinator', 'Guru'] },
-    { id: 'Manajemen Guru', icon: <UsersIcon className="w-5 h-5"/>, title: "Manajemen Guru", subtitle: "Kelola data pengajar", roles: ['Koordinator'] },
-    { id: 'Manajemen Kelas', icon: <ClassManagementIcon className="w-5 h-5"/>, title: "Manajemen Kelas", subtitle: "Kelola data kelas", roles: ['Koordinator'] },
-    { id: 'Manajemen Halaqah', icon: <HalaqahManagementIcon className="w-5 h-5"/>, title: "Manajemen Halaqah", subtitle: "Kelola data halaqah", roles: ['Koordinator'] },
+    { id: 'Resume Laporan', icon: <ReportIcon className="w-5 h-5"/>, title: "Resume Laporan", subtitle: "Ringkasan laporan bulanan", roles: ['Koordinator', 'Guru', 'Kepala Sekolah'] },
+    { id: 'Manajemen Guru', icon: <UsersIcon className="w-5 h-5"/>, title: "Manajemen Guru", subtitle: "Kelola data pengajar", roles: ['Koordinator', 'Kepala Sekolah'] },
+    { id: 'Manajemen Kelas', icon: <ClassManagementIcon className="w-5 h-5"/>, title: "Manajemen Kelas", subtitle: "Kelola data kelas", roles: ['Koordinator', 'Kepala Sekolah'] },
+    { id: 'Manajemen Halaqah', icon: <HalaqahManagementIcon className="w-5 h-5"/>, title: "Manajemen Halaqah", subtitle: "Kelola data halaqah", roles: ['Koordinator', 'Kepala Sekolah'] },
   ];
   
   const navItems = allNavItems.filter(item => user && item.roles.includes(user.role));
@@ -126,24 +126,20 @@ const Sidebar: React.FC<SidebarProps> = ({
             </div>
         ) : (
             <nav className="flex-1 py-8 space-y-2">
-                {navItems.map(item => {
-                    // For Coordinator, only 'Dashboard Guru' is not needed
-                    if (item.id === 'Dashboard Guru') return null;
-                    return (
-                        <NavItem 
-                            key={item.id} 
-                            id={item.id}
-                            icon={item.icon}
-                            title={item.title}
-                            subtitle={item.subtitle}
-                            active={activeView === item.id}
-                            onClick={(view) => {
-                                setActiveView(view);
-                                setIsOpen(false);
-                            }}
-                        />
-                    )
-                })}
+                {navItems.map(item => (
+                    <NavItem 
+                        key={item.id} 
+                        id={item.id}
+                        icon={item.icon}
+                        title={item.title}
+                        subtitle={item.subtitle}
+                        active={activeView === item.id}
+                        onClick={(view) => {
+                            setActiveView(view);
+                            setIsOpen(false);
+                        }}
+                    />
+                ))}
             </nav>
         )}
 

@@ -8,6 +8,7 @@ interface HalaqahManagementProps {
   onAddHalaqah: (classId: string, newHalaqah: Omit<Halaqah, 'id'|'laporan'>) => Promise<void>;
   onUpdateHalaqah: (classId: string, updatedHalaqah: Halaqah) => Promise<void>;
   onDeleteHalaqah: (classId: string, halaqahId: string) => Promise<void>;
+  currentUser: User;
 }
 
 const HalaqahFormModal: React.FC<{
@@ -127,9 +128,10 @@ const HalaqahFormModal: React.FC<{
     );
 };
 
-const HalaqahManagement: React.FC<HalaqahManagementProps> = ({ classes, teachers, onAddHalaqah, onUpdateHalaqah, onDeleteHalaqah }) => {
+const HalaqahManagement: React.FC<HalaqahManagementProps> = ({ classes, teachers, onAddHalaqah, onUpdateHalaqah, onDeleteHalaqah, currentUser }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingData, setEditingData] = useState<{ halaqah: Halaqah | null, classId: string | null }>({ halaqah: null, classId: null });
+    const isReadOnly = currentUser.role === 'Kepala Sekolah';
     
     const handleOpenAddModal = () => {
         setEditingData({ halaqah: null, classId: null });
@@ -156,13 +158,15 @@ const HalaqahManagement: React.FC<HalaqahManagementProps> = ({ classes, teachers
                     <h1 className="text-3xl font-bold text-teal-600">Manajemen Halaqah</h1>
                     <p className="text-gray-500 mt-1">Tambah, edit, atau hapus data halaqah</p>
                 </div>
-                <button 
-                    onClick={handleOpenAddModal} 
-                    className="bg-teal-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-600 transition-all flex items-center gap-2 shadow-md"
-                >
-                    <PlusIcon className="w-5 h-5"/>
-                    <span>Tambah Halaqah Baru</span>
-                </button>
+                {!isReadOnly && (
+                    <button 
+                        onClick={handleOpenAddModal} 
+                        className="bg-teal-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-600 transition-all flex items-center gap-2 shadow-md"
+                    >
+                        <PlusIcon className="w-5 h-5"/>
+                        <span>Tambah Halaqah Baru</span>
+                    </button>
+                )}
             </header>
 
             <div className="space-y-6">
@@ -190,12 +194,14 @@ const HalaqahManagement: React.FC<HalaqahManagementProps> = ({ classes, teachers
                                                 {halaqah.guru?.name || 'N/A'}
                                             </td>
                                             <td className="px-6 py-4 text-right">
-                                                <button onClick={() => handleOpenEditModal(schoolClass.id, halaqah)} className="p-2 text-yellow-500 hover:text-yellow-700">
-                                                    <PencilIcon className="w-5 h-5" />
-                                                </button>
-                                                <button onClick={() => onDeleteHalaqah(schoolClass.id, halaqah.id)} className="p-2 text-red-500 hover:text-red-700">
-                                                    <TrashIcon className="w-5 h-5" />
-                                                </button>
+                                                {!isReadOnly && (<>
+                                                    <button onClick={() => handleOpenEditModal(schoolClass.id, halaqah)} className="p-2 text-yellow-500 hover:text-yellow-700">
+                                                        <PencilIcon className="w-5 h-5" />
+                                                    </button>
+                                                    <button onClick={() => onDeleteHalaqah(schoolClass.id, halaqah.id)} className="p-2 text-red-500 hover:text-red-700">
+                                                        <TrashIcon className="w-5 h-5" />
+                                                    </button>
+                                                </>)}
                                             </td>
                                         </tr>
                                     ))}

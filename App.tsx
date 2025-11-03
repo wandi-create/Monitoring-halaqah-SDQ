@@ -92,7 +92,7 @@ const App: React.FC = () => {
             if (error) throw error;
             reportsData = data || [];
           }
-        } else { // 'Koordinator' gets all reports
+        } else { // 'Koordinator' or 'Kepala Sekolah' gets all reports
           const { data, error } = await supabase.from('laporan').select('*');
           if (error) throw error;
           reportsData = data || [];
@@ -175,7 +175,12 @@ const App: React.FC = () => {
   useEffect(() => {
     if (currentUser) {
       sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
-      setActiveView(currentUser.role === 'Guru' ? 'Dashboard Guru' : 'Monitoring');
+      if(currentUser.role === 'Guru') {
+        setActiveView('Dashboard Guru');
+      } else if (activeView === 'Dashboard Guru') {
+        // If user is not a Guru but somehow has Dashboard Guru view active (e.g. from session), default to Monitoring
+        setActiveView('Monitoring');
+      }
     } else {
       sessionStorage.removeItem('currentUser');
     }
@@ -376,9 +381,9 @@ const App: React.FC = () => {
           {activeView === 'Monitoring' && <MonitoringDashboard currentUser={currentUser} classes={classes} onUpdateReport={handleUpdateReport} />}
           {activeView === 'Resume Laporan' && <ResumeLaporan currentUser={currentUser} classes={classes} onUpdateReport={handleUpdateReport} />}
           {activeView === 'Input Laporan' && <BulkInput classes={classes} onUpdateReport={handleUpdateReport} />}
-          {activeView === 'Manajemen Kelas' && <ClassManagement classes={classes} onAddClass={handleAddClass} onUpdateClass={handleUpdateClass} onDeleteClass={handleDeleteClass} />}
-          {activeView === 'Manajemen Halaqah' && <HalaqahManagement classes={classes} teachers={users} onAddHalaqah={handleAddHalaqah} onUpdateHalaqah={handleUpdateHalaqah} onDeleteHalaqah={handleDeleteHalaqah} />}
-          {activeView === 'Manajemen Guru' && <TeacherManagement teachers={users} classes={classes} onAddTeacher={handleAddUser} onUpdateTeacher={handleUpdateUser} onDeleteTeacher={handleDeleteUser} />}
+          {activeView === 'Manajemen Kelas' && <ClassManagement classes={classes} onAddClass={handleAddClass} onUpdateClass={handleUpdateClass} onDeleteClass={handleDeleteClass} currentUser={currentUser} />}
+          {activeView === 'Manajemen Halaqah' && <HalaqahManagement classes={classes} teachers={users} onAddHalaqah={handleAddHalaqah} onUpdateHalaqah={handleUpdateHalaqah} onDeleteHalaqah={handleDeleteHalaqah} currentUser={currentUser} />}
+          {activeView === 'Manajemen Guru' && <TeacherManagement teachers={users} classes={classes} onAddTeacher={handleAddUser} onUpdateTeacher={handleUpdateUser} onDeleteTeacher={handleDeleteUser} currentUser={currentUser} />}
         </main>
       </div>
     </div>

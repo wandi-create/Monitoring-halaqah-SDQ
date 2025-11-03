@@ -8,6 +8,7 @@ interface TeacherManagementProps {
   onAddTeacher: (newUser: Omit<User, 'id'>) => Promise<void>;
   onUpdateTeacher: (updatedUser: User) => Promise<void>;
   onDeleteTeacher: (userId: string) => Promise<void>;
+  currentUser: User;
 }
 
 const TeacherFormModal: React.FC<{
@@ -19,7 +20,7 @@ const TeacherFormModal: React.FC<{
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [role, setRole] = useState<'Koordinator' | 'Guru'>('Guru');
+    const [role, setRole] = useState<'Koordinator' | 'Guru' | 'Kepala Sekolah'>('Guru');
     const [gender, setGender] = useState<'Ikhwan' | 'Akhwat'>('Ikhwan');
     
     const isEditMode = teacherData && 'id' in teacherData;
@@ -106,6 +107,10 @@ const TeacherFormModal: React.FC<{
                                     <input type="radio" className="form-radio text-purple-600" value="Koordinator" checked={role === 'Koordinator'} onChange={() => setRole('Koordinator')} />
                                     <span className="ml-2">Koordinator</span>
                                 </label>
+                                <label className="inline-flex items-center">
+                                    <input type="radio" className="form-radio text-indigo-600" value="Kepala Sekolah" checked={role === 'Kepala Sekolah'} onChange={() => setRole('Kepala Sekolah')} />
+                                    <span className="ml-2">Kepala Sekolah</span>
+                                </label>
                              </div>
                         </div>
                     </div>
@@ -123,9 +128,10 @@ const TeacherFormModal: React.FC<{
     );
 };
 
-const TeacherManagement: React.FC<TeacherManagementProps> = ({ teachers, classes, onAddTeacher, onUpdateTeacher, onDeleteTeacher }) => {
+const TeacherManagement: React.FC<TeacherManagementProps> = ({ teachers, classes, onAddTeacher, onUpdateTeacher, onDeleteTeacher, currentUser }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingTeacher, setEditingTeacher] = useState<User | null>(null);
+    const isReadOnly = currentUser.role === 'Kepala Sekolah';
 
     const handleOpenAddModal = () => {
         setEditingTeacher(null);
@@ -160,10 +166,12 @@ const TeacherManagement: React.FC<TeacherManagementProps> = ({ teachers, classes
             <h1 className="text-3xl font-bold text-teal-600">Manajemen User</h1>
             <p className="text-gray-500 mt-1">Tambah, edit, atau hapus data user (Guru & Koordinator)</p>
         </div>
-        <button onClick={handleOpenAddModal} className="bg-teal-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-600 transition-all flex items-center gap-2 shadow-md">
-            <PlusIcon className="w-5 h-5"/>
-            Tambah User Baru
-        </button>
+        {!isReadOnly && (
+            <button onClick={handleOpenAddModal} className="bg-teal-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-600 transition-all flex items-center gap-2 shadow-md">
+                <PlusIcon className="w-5 h-5"/>
+                Tambah User Baru
+            </button>
+        )}
       </header>
       
       <div className="bg-white rounded-xl shadow-md p-5 border border-gray-200/80">
@@ -185,18 +193,20 @@ const TeacherManagement: React.FC<TeacherManagementProps> = ({ teachers, classes
                                 <p className="text-xs text-gray-500 font-normal">{teacher.email}</p>
                             </th>
                             <td className="px-6 py-4">
-                               <span className={`px-2 py-1 text-xs font-semibold rounded-full ${teacher.role === 'Koordinator' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'}`}>
+                               <span className={`px-2 py-1 text-xs font-semibold rounded-full ${teacher.role === 'Koordinator' ? 'bg-purple-100 text-purple-800' : teacher.role === 'Kepala Sekolah' ? 'bg-indigo-100 text-indigo-800' : 'bg-green-100 text-green-800'}`}>
                                     {teacher.role}
                                 </span>
                             </td>
                              <td className="px-6 py-4 text-xs">{getHalaqahAssignments(teacher.id) || "-"}</td>
                             <td className="px-6 py-4 text-right">
-                                <button onClick={() => handleOpenEditModal(teacher)} className="p-2 text-yellow-500 hover:text-yellow-700">
-                                    <PencilIcon className="w-5 h-5" />
-                                </button>
-                                <button onClick={() => onDeleteTeacher(teacher.id)} className="p-2 text-red-500 hover:text-red-700">
-                                    <TrashIcon className="w-5 h-5" />
-                                </button>
+                                {!isReadOnly && (<>
+                                    <button onClick={() => handleOpenEditModal(teacher)} className="p-2 text-yellow-500 hover:text-yellow-700">
+                                        <PencilIcon className="w-5 h-5" />
+                                    </button>
+                                    <button onClick={() => onDeleteTeacher(teacher.id)} className="p-2 text-red-500 hover:text-red-700">
+                                        <TrashIcon className="w-5 h-5" />
+                                    </button>
+                                </>)}
                             </td>
                         </tr>
                     ))}
