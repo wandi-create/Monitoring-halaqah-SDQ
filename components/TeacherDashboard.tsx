@@ -106,8 +106,8 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ currentUser, classe
 
                         return (
                             <div key={halaqah.id} className="grid grid-cols-1 md:grid-cols-3 items-center gap-4 p-4 rounded-lg border hover:bg-gray-50/80 transition-colors">
-                                <div className="md:col-span-2">
-                                    <h3 className="font-bold text-lg text-gray-800">{halaqah.name}</h3>
+                                <div className="md:col-span-2 min-w-0">
+                                    <h3 className="font-bold text-lg text-gray-800 break-words">{halaqah.name}</h3>
                                     <p className="text-sm text-gray-500">{halaqah.className}</p>
                                 </div>
                                 <div className="flex items-center justify-start md:justify-end gap-3 flex-wrap">
