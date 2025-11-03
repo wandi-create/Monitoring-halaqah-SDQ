@@ -26,12 +26,58 @@ type ReportField = keyof typeof BLANK_REPORT_FIELDS;
 
 
 const normalizeReportField = (fieldData: any, defaultTitle: string): ReportSection[] => {
-  if (Array.isArray(fieldData)) {
+  // Case 1: Already a valid ReportSection array
+  if (Array.isArray(fieldData) && fieldData.every(item => typeof item === 'object' && item !== null && 'id' in item)) {
     return fieldData;
   }
-  if (typeof fieldData === 'string' && fieldData.trim() !== '') {
-    return [{ id: `migrated-${Date.now()}`, title: defaultTitle, content: fieldData }];
+  
+  // Case 2: A string that is actually a JSON representation of a ReportSection array
+  if (typeof fieldData === 'string' && fieldData.trim().startsWith('[')) {
+    try {
+      const parsedData = JSON.parse(fieldData);
+      if (Array.isArray(parsedData)) {
+        const conformedData = parsedData.map((item, index) => {
+          if (typeof item === 'object' && item !== null) {
+            
+            let finalContent = item.content || '';
+
+            // Lakukan parsing lapis kedua jika 'content' adalah string JSON
+            if (typeof finalContent === 'string' && finalContent.trim().startsWith('[')) {
+              try {
+                const nestedParsed = JSON.parse(finalContent);
+                if (Array.isArray(nestedParsed) && nestedParsed.length > 0 && nestedParsed[0].content) {
+                  // Ambil 'content' dari hasil parsing lapis kedua
+                  finalContent = nestedParsed[0].content;
+                }
+              } catch (e) {
+                // Jika parsing lapis kedua gagal, biarkan 'finalContent' apa adanya (sebagai fallback)
+              }
+            }
+
+            return {
+              id: item.id || `migrated-json-${Date.now()}-${index}`,
+              title: item.title || defaultTitle,
+              content: finalContent, // Gunakan konten yang sudah final
+            };
+          }
+          return null;
+        }).filter((item): item is ReportSection => item !== null);
+
+        if (conformedData.length > 0) {
+            return conformedData;
+        }
+      }
+    } catch (e) {
+      // Parsing lapis pertama gagal, lanjut ke fallback
+    }
   }
+
+  // Case 3: A plain string, wrap it into a single ReportSection
+  if (typeof fieldData === 'string' && fieldData.trim() !== '') {
+    return [{ id: `migrated-str-${Date.now()}`, title: defaultTitle, content: fieldData }];
+  }
+
+  // Case 4: Empty or invalid data
   return [];
 };
 
