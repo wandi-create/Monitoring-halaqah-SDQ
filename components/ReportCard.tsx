@@ -161,6 +161,7 @@ const ReportCard: React.FC<ReportCardProps> = ({ schoolClass, halaqah, onSaveRep
     { key: 'identified_challenges', label: 'Tantangan Terindikasi', placeholder: 'Jelaskan poin-poin tantangan...' },
     { key: 'follow_up_recommendations', label: 'Rekomendasi Tindak Lanjut', placeholder: 'Jelaskan poin-poin rekomendasi...' },
     { key: 'next_month_target', label: 'Target Bulan Depan', placeholder: 'Jelaskan poin-poin target...' },
+    { key: 'coordinator_notes', label: 'Catatan Koordinator', placeholder: 'Tuliskan catatan atau feedback untuk guru...' },
   ];
 
   if (!currentReport) {

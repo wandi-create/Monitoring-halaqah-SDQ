@@ -56,12 +56,29 @@ const renderContentToHTML = (text: string) => {
 };
 
 const normalizeReportField = (fieldData: any, defaultTitle: string): ReportSection[] => {
+  // Case 1: Already a valid ReportSection array
   if (Array.isArray(fieldData) && fieldData.every(item => typeof item === 'object' && item !== null && 'id' in item)) {
     return fieldData;
   }
+  
+  // Case 2: A string that is actually a JSON representation of a ReportSection array
+  if (typeof fieldData === 'string' && fieldData.trim().startsWith('[')) {
+    try {
+      const parsedData = JSON.parse(fieldData);
+      if (Array.isArray(parsedData) && parsedData.every(item => typeof item === 'object' && item !== null && 'id' in item)) {
+        return parsedData; // It's a valid ReportSection array, return it
+      }
+    } catch (e) {
+      // Not a valid JSON, fall through to treat as a plain string
+    }
+  }
+
+  // Case 3: A plain string, wrap it into a single ReportSection
   if (typeof fieldData === 'string' && fieldData.trim() !== '') {
     return [{ id: `migrated-${Date.now()}`, title: defaultTitle, content: fieldData }];
   }
+
+  // Case 4: Empty or invalid data
   return [];
 };
 
