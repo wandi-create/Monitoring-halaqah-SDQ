@@ -9,6 +9,8 @@ interface TeacherDashboardProps {
   currentUser: User;
   classes: SchoolClass[];
   onUpdateReport: (report: Report) => Promise<void>;
+  selectedYear: number;
+  selectedMonth: number;
 }
 
 type ExtendedHalaqah = Halaqah & {
@@ -35,20 +37,11 @@ const StatCard: React.FC<{ icon: React.ReactNode; title: string; value: string |
 );
 
 
-const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ currentUser, classes, onUpdateReport }) => {
+const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ currentUser, classes, onUpdateReport, selectedYear, selectedMonth }) => {
     const [selectedReportForDetail, setSelectedReportForDetail] = useState<ExtendedReport | null>(null);
 
-    const getPreviousMonthAndYear = () => {
-        const date = new Date();
-        date.setMonth(date.getMonth() - 1);
-        return {
-            year: date.getFullYear(),
-            month: date.getMonth() + 1,
-        };
-    };
-
-    const { year: currentYear, month: currentMonth } = getPreviousMonthAndYear();
-
+    const currentYear = selectedYear;
+    const currentMonth = selectedMonth;
 
     const allHalaqahs: ExtendedHalaqah[] = useMemo(() => 
         classes.flatMap(c => c.halaqah.map(h => ({ ...h, className: c.name, classId: c.id } as ExtendedHalaqah)))

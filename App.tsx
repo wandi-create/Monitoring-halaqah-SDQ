@@ -34,6 +34,20 @@ const App: React.FC = () => {
 
   const [activeView, setActiveView] = useState<View>('Monitoring');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  
+  const getPreviousMonthAndYear = useCallback(() => {
+    const date = new Date();
+    date.setMonth(date.getMonth() - 1);
+    return {
+      year: date.getFullYear(),
+      month: date.getMonth() + 1,
+    };
+  }, []);
+
+  const { year: initialYear, month: initialMonth } = getPreviousMonthAndYear();
+  const [selectedYear, setSelectedYear] = useState<number>(initialYear);
+  const [selectedMonth, setSelectedMonth] = useState<number>(initialMonth);
+
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -345,6 +359,10 @@ const App: React.FC = () => {
         setIsOpen={setIsSidebarOpen}
         user={currentUser}
         onLogout={handleLogout}
+        selectedYear={selectedYear}
+        setSelectedYear={setSelectedYear}
+        selectedMonth={selectedMonth}
+        setSelectedMonth={setSelectedMonth}
       />
       <div className="flex-1 flex flex-col sm:ml-72">
         <header className="sm:hidden p-4 bg-white shadow-md flex justify-between items-center z-20 sticky top-0">
@@ -354,7 +372,7 @@ const App: React.FC = () => {
           </button>
         </header>
         <main className="flex-1 p-4 sm:p-6">
-          {activeView === 'Dashboard Guru' && <TeacherDashboard currentUser={currentUser} classes={classes} onUpdateReport={handleUpdateReport} />}
+          {activeView === 'Dashboard Guru' && <TeacherDashboard currentUser={currentUser} classes={classes} onUpdateReport={handleUpdateReport} selectedYear={selectedYear} selectedMonth={selectedMonth} />}
           {activeView === 'Monitoring' && <MonitoringDashboard currentUser={currentUser} classes={classes} onUpdateReport={handleUpdateReport} />}
           {activeView === 'Resume Laporan' && <ResumeLaporan currentUser={currentUser} classes={classes} onUpdateReport={handleUpdateReport} />}
           {activeView === 'Input Laporan' && <BulkInput classes={classes} onUpdateReport={handleUpdateReport} />}
