@@ -65,8 +65,23 @@ const normalizeReportField = (fieldData: any, defaultTitle: string): ReportSecti
   if (typeof fieldData === 'string' && fieldData.trim().startsWith('[')) {
     try {
       const parsedData = JSON.parse(fieldData);
-      if (Array.isArray(parsedData) && parsedData.every(item => typeof item === 'object' && item !== null && 'id' in item)) {
-        return parsedData; // It's a valid ReportSection array, return it
+      if (Array.isArray(parsedData)) {
+        // Map over parsed data to ensure it conforms to ReportSection structure.
+        // This handles historical data that might be missing an 'id' or has other inconsistencies.
+        const conformedData = parsedData.map((item, index) => {
+          if (typeof item === 'object' && item !== null) {
+            return {
+              id: item.id || `migrated-json-${Date.now()}-${index}`,
+              title: item.title || defaultTitle,
+              content: item.content || ''
+            };
+          }
+          return null; // This will be filtered out
+        }).filter((item): item is ReportSection => item !== null);
+
+        if (conformedData.length > 0) {
+            return conformedData;
+        }
       }
     } catch (e) {
       // Not a valid JSON, fall through to treat as a plain string
@@ -75,7 +90,7 @@ const normalizeReportField = (fieldData: any, defaultTitle: string): ReportSecti
 
   // Case 3: A plain string, wrap it into a single ReportSection
   if (typeof fieldData === 'string' && fieldData.trim() !== '') {
-    return [{ id: `migrated-${Date.now()}`, title: defaultTitle, content: fieldData }];
+    return [{ id: `migrated-str-${Date.now()}`, title: defaultTitle, content: fieldData }];
   }
 
   // Case 4: Empty or invalid data
