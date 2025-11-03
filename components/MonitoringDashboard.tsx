@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { SchoolClass, User, Report, Halaqah } from '../types';
-import { ClockIcon, EyeIcon, CheckCircleIcon, XCircleIcon } from './Icons';
+import { ClockIcon, EyeIcon, CheckCircleIcon, XCircleIcon, UsersIcon, DocumentTextIcon } from './Icons';
 import ReportDetailModal from './ReportDetailModal';
+import { MONTHS } from '../constants';
 
 
 type ExtendedReport = Report & {
@@ -16,9 +17,35 @@ interface MonitoringDashboardProps {
   onUpdateReport: (report: Report) => Promise<void>;
 }
 
+const StatCard: React.FC<{ icon: React.ReactNode; title: string; value: string | number; color: string }> = ({ icon, title, value, color }) => (
+    <div className="bg-white p-5 rounded-xl shadow-md border flex items-center gap-4" style={{borderColor: color}}>
+        <div className="p-3 rounded-full" style={{backgroundColor: `${color}20`, color: color}}>
+           {icon}
+        </div>
+        <div>
+            <p className="text-sm text-gray-500">{title}</p>
+            <p className="text-2xl font-bold text-gray-800">{value}</p>
+        </div>
+    </div>
+);
+
+
 const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ classes, currentUser, onUpdateReport }) => {
   const [activeTab, setActiveTab] = useState<'Ikhwan' | 'Akhwat'>('Ikhwan');
   const [selectedReport, setSelectedReport] = useState<ExtendedReport | null>(null);
+
+  const getPreviousMonthAndYear = () => {
+    const date = new Date();
+    date.setMonth(date.getMonth() - 1);
+    return {
+        year: date.getFullYear(),
+        month: date.getMonth() + 1,
+    };
+  };
+
+  const { year: defaultYear, month: defaultMonth } = getPreviousMonthAndYear();
+  const [selectedYear, setSelectedYear] = useState(defaultYear);
+  const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
 
   const ikhwanClasses = classes.filter(c => c.gender === 'Ikhwan');
   const akhwatClasses = classes.filter(c => c.gender === 'Akhwat');
@@ -35,6 +62,15 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ classes, curr
     setSelectedReport(extendedReport);
   };
 
+  const allHalaqahs = useMemo(() =>
+    classes.flatMap(c => c.halaqah)
+  , [classes]);
+
+  const submittedReportsCount = useMemo(() =>
+    allHalaqahs.filter(h => h.laporan?.some(r => r.year === selectedYear && r.month === selectedMonth)).length
+  , [allHalaqahs, selectedYear, selectedMonth]);
+
+
   const TabButton: React.FC<{ title: string; count: number; active: boolean; onClick: () => void; }> = ({ title, count, active, onClick }) => (
     <button
       onClick={onClick}
@@ -50,10 +86,37 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ classes, curr
 
   return (
     <>
-      <header className="mb-6">
-        <h1 className="text-3xl font-bold text-teal-600">Monitoring Halaqah Al Qur'an</h1>
-        <p className="text-gray-500 mt-1">SDQ Mutiara Sunnah - Sistem Monitoring Bulanan</p>
+      <header className="mb-8">
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 flex-wrap">
+            <div>
+                <h1 className="text-3xl font-bold text-teal-600">Monitoring Halaqah Al Qur'an</h1>
+                <p className="text-gray-500 mt-1">SDQ Mutiara Sunnah - Sistem Monitoring Bulanan</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <select
+                value={selectedMonth}
+                onChange={e => setSelectedMonth(Number(e.target.value))}
+                className="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500"
+              >
+                {MONTHS.map((month, index) => (
+                  <option key={month} value={index + 1}>{month}</option>
+                ))}
+              </select>
+              <input
+                type="number"
+                value={selectedYear}
+                onChange={e => setSelectedYear(Number(e.target.value))}
+                className="p-2 w-28 border border-gray-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500"
+              />
+            </div>
+        </div>
       </header>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <StatCard icon={<DocumentTextIcon className="w-6 h-6"/>} title="Laporan Bulan Ini" value={`${submittedReportsCount} / ${allHalaqahs.length}`} color="#34d399" />
+          <StatCard icon={<CheckCircleIcon className="w-6 h-6"/>} title="Total Halaqah" value={allHalaqahs.length} color="#a78bfa" />
+      </div>
+
 
       <div className="flex items-center space-x-2 bg-white p-2 rounded-full shadow-sm max-w-md">
         <TabButton 
@@ -82,10 +145,7 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ classes, curr
             </div>
             <div className="mt-4 space-y-3">
               {schoolClass.halaqah.map(halaqah => {
-                const date = new Date();
-                const currentMonth = date.getMonth() + 1;
-                const currentYear = date.getFullYear();
-                const currentReport = halaqah.laporan?.find(r => r.year === currentYear && r.month === currentMonth);
+                const currentReport = halaqah.laporan?.find(r => r.year === selectedYear && r.month === selectedMonth);
 
                 return (
                   <div key={halaqah.id} className="bg-gray-100/70 rounded-lg p-3">

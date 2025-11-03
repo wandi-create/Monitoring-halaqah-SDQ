@@ -47,13 +47,13 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ currentUser, classe
         classes.flatMap(c => c.halaqah.map(h => ({ ...h, className: c.name, classId: c.id } as ExtendedHalaqah)))
     , [classes]);
 
-    const totalStudents = useMemo(() => {
-        return allHalaqahs.reduce((sum, halaqah) => sum + (halaqah.student_count || 0), 0);
-    }, [allHalaqahs]);
-
     const submittedReportsCount = useMemo(() => {
         return allHalaqahs.filter(h => h.laporan?.some(r => r.year === currentYear && r.month === currentMonth)).length;
     }, [allHalaqahs, currentMonth, currentYear]);
+    
+    const totalStudents = useMemo(() =>
+        allHalaqahs.reduce((sum, h) => sum + h.student_count, 0)
+    , [allHalaqahs]);
 
     
     const handleOpenDetailModal = (report: Report, halaqah: ExtendedHalaqah) => {
@@ -92,8 +92,8 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ currentUser, classe
                 <p className="text-gray-500 mt-2">Selamat datang di dashboard Anda. Mari kita lihat progres halaqah bulan ini.</p>
             </header>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                <StatCard icon={<UsersIcon className="w-6 h-6"/>} title="Total Murid" value={totalStudents} color="#38bdf8" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <StatCard icon={<UsersIcon className="w-6 h-6"/>} title="Total Murid" value={totalStudents} color="#60a5fa" />
                 <StatCard icon={<DocumentTextIcon className="w-6 h-6"/>} title="Laporan Bulan Ini" value={`${submittedReportsCount} / ${allHalaqahs.length}`} color="#34d399" />
                 <StatCard icon={<CheckCircleIcon className="w-6 h-6"/>} title="Bulan Laporan" value={`${MONTHS[currentMonth-1]} ${currentYear}`} color="#a78bfa" />
             </div>
