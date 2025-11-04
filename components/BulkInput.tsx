@@ -73,6 +73,7 @@ const BulkInput: React.FC<BulkInputProps> = ({ classes, onUpdateReport }) => {
                 <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                     <tr>
                         <th scope="col" className="px-6 py-3">Halaqah</th>
+                        <th scope="col" className="px-6 py-3">Pengajar</th>
                         <th scope="col" className="px-6 py-3">Status Laporan</th>
                         <th scope="col" className="px-6 py-3 text-right">Aksi</th>
                     </tr>
@@ -86,6 +87,9 @@ const BulkInput: React.FC<BulkInputProps> = ({ classes, onUpdateReport }) => {
                                     {halaqah.name}
                                     <p className="text-xs text-gray-500 font-normal">{schoolClass.name}</p>
                                 </th>
+                                <td className="px-6 py-4">
+                                    {halaqah.guru?.name || 'N/A'}
+                                </td>
                                 <td className="px-6 py-4">
                                     {currentReport ? 
                                         <span className="flex items-center gap-2 text-xs font-semibold text-green-700 bg-green-100 px-3 py-1.5 rounded-full w-fit">
