@@ -26,32 +26,60 @@ const renderContentToHTML = (text: string) => {
 
     const lines = text.split('\n');
     let html = '';
-    let inList = false;
+    let listLevel = 0; // 0 = no list, 1 = ul, 2 = nested ul
 
-    for (const line of lines) {
-        const isListItem = line.trim().startsWith('- ');
+    const processBold = (str: string) => str.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 
-        if (isListItem) {
-            if (!inList) {
-                html += '<ul class="list-disc list-inside space-y-1 pl-2">';
-                inList = true;
+    lines.forEach(line => {
+        if (line.trim().startsWith('-- ')) {
+            const content = processBold(line.trim().substring(3));
+            if (listLevel < 1) { // Started nested without parent, treat as level 1
+                html += '<ul>';
+                listLevel = 1;
             }
-            html += `<li>${line.trim().substring(2)}</li>`;
-        } else {
-            if (inList) {
+            if (listLevel < 2) {
+                // remove closing </li> from previous item to start a nested list
+                if (html.endsWith('</li>')) {
+                    html = html.slice(0, -5);
+                }
+                html += '<ul>';
+                listLevel = 2;
+            }
+            html += `<li>${content}</li>`;
+        } else if (line.trim().startsWith('- ')) {
+            const content = processBold(line.trim().substring(2));
+            if (listLevel === 2) {
+                html += '</ul></li>'; // close nested list and its parent li
+                listLevel = 1;
+            }
+            if (listLevel < 1) {
+                html += '<ul>';
+                listLevel = 1;
+            }
+            html += `<li>${content}</li>`;
+        } else { // Not a list item
+            if (listLevel === 2) {
+                html += '</ul></li>';
+                listLevel = 1;
+            }
+            if (listLevel === 1) {
                 html += '</ul>';
-                inList = false;
+                listLevel = 0;
             }
-            if (line.trim() !== '') {
-                html += `<p class="my-1.5">${line.trim()}</p>`;
+            
+            if (line.trim()) {
+                html += `<p>${processBold(line.trim())}</p>`;
             }
         }
-    }
+    });
 
-    if (inList) {
+    // Close any remaining tags
+    if (listLevel === 2) {
+        html += '</ul></li>';
+    } else if (listLevel === 1) {
         html += '</ul>';
     }
-
+    
     return html;
 };
 
