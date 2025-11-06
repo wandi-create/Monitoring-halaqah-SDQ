@@ -26,30 +26,57 @@ const renderContentToHTML = (content: string | null | undefined): string => {
 
     const lines = content.trim().split('\n');
     let html = '';
-    let inList = false;
+    let currentLevel = 0;
 
     for (const line of lines) {
         const trimmedLine = line.trim();
-        if (trimmedLine.startsWith('- ')) {
-            if (!inList) {
-                html += '<ul class="list-disc list-outside pl-5 space-y-1">';
-                inList = true;
-            }
-            const itemContent = trimmedLine.substring(2).trim();
-            html += `<li>${itemContent}</li>`;
-        } else {
-            if (inList) {
-                html += '</ul>';
-                inList = false;
-            }
-            if (trimmedLine) { // Avoid creating empty paragraphs
-                html += `<p>${trimmedLine}</p>`;
-            }
+        let level = 0;
+        let lineContent = trimmedLine;
+
+        // Check for nested bullet first
+        if (trimmedLine.startsWith('-- ')) {
+            level = 2;
+            lineContent = trimmedLine.substring(3).trim();
+        } else if (trimmedLine.startsWith('- ')) {
+            level = 1;
+            lineContent = trimmedLine.substring(2).trim();
         }
+
+        // Handle level changes to open/close lists
+        if (level > currentLevel) {
+            // Going deeper into nesting
+            for (let i = currentLevel; i < level; i++) {
+                const ulClass = i === 0 
+                    ? 'class="list-disc list-outside pl-5 space-y-1"' 
+                    : 'class="list-disc list-outside pl-5 mt-1 space-y-1"'; // Nested list with top margin
+                html += `<ul ${ulClass}>`;
+            }
+        } else if (level < currentLevel) {
+            // Coming out of nesting
+            for (let i = currentLevel; i > level; i--) {
+                html += '</li></ul>';
+            }
+            if (level > 0) {
+                 html += '</li>'; // Close previous li at the new level
+            }
+        } else if (currentLevel > 0) {
+            // Same level, but not root. Close previous item.
+            html += '</li>';
+        }
+
+        // Add the content for the current line
+        if (level > 0) {
+            html += `<li>${lineContent}`; // Don't close li yet, might have nested items
+        } else if (lineContent) {
+            html += `<p>${lineContent}</p>`;
+        }
+
+        currentLevel = level;
     }
 
-    if (inList) {
-        html += '</ul>';
+    // At the end, close any remaining open tags
+    for (let i = currentLevel; i > 0; i--) {
+        html += '</li></ul>';
     }
 
     return html;
