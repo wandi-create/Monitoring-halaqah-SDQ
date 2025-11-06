@@ -41,6 +41,13 @@ const renderContentToHTML = (content: string | null | undefined): string => {
             level = 1;
             lineContent = trimmedLine.substring(2).trim();
         }
+        
+        // Apply bold and italic formatting using regex
+        // Process bold first, then italic to handle nesting correctly
+        lineContent = lineContent
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>');
+
 
         // Handle level changes to open/close lists
         if (level > currentLevel) {
@@ -178,12 +185,22 @@ const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ report, onClose, 
     const isGuru = currentUser.role === 'Guru';
     const followUpOptions: FollowUpStatus[] = ['Belum Dimulai', 'Sedang Berjalan', 'Selesai', 'Butuh Diskusi'];
 
+    const getNextMonthDetails = () => {
+        if (!report?.month || !report?.year) return '';
+        // report.month is 1-12. Date constructor month is 0-11.
+        // Passing `report.month` to `new Date` correctly gets the next month, handling year rollover.
+        const nextDate = new Date(report.year, report.month, 1);
+        const nextMonthName = MONTHS[nextDate.getMonth()];
+        const nextYear = nextDate.getFullYear();
+        return `(${nextMonthName} ${nextYear})`;
+    };
+
     const reportCategories: { label: string; sections: ReportSection[] }[] = [
         { label: 'Insight Utama', sections: normalizeReportField(report.main_insight, 'Insight Utama') },
         { label: 'Segmentasi Murid', sections: normalizeReportField(report.student_segmentation, 'Segmentasi Murid') },
         { label: 'Tantangan Terindikasi', sections: normalizeReportField(report.identified_challenges, 'Tantangan') },
         { label: 'Rekomendasi Tindak Lanjut', sections: normalizeReportField(report.follow_up_recommendations, 'Rekomendasi') },
-        { label: 'Target Bulan Depan', sections: normalizeReportField(report.next_month_target, 'Target') },
+        { label: `Target Bulan Depan ${getNextMonthDetails()}`, sections: normalizeReportField(report.next_month_target, 'Target') },
         { label: 'Catatan Koordinator', sections: normalizeReportField(report.coordinator_notes, 'Catatan Koordinator') },
     ];
 
