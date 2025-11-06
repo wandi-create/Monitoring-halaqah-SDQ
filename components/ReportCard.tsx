@@ -81,7 +81,6 @@ const normalizeReportField = (fieldData: any, defaultTitle: string): ReportSecti
   return [];
 };
 
-
 const ReportCard: React.FC<ReportCardProps> = ({ schoolClass, halaqah, onSaveReport, months, initialYear, initialMonth }) => {
   const getPreviousMonthAndYear = () => {
       const date = new Date();
@@ -157,40 +156,6 @@ const ReportCard: React.FC<ReportCardProps> = ({ schoolClass, halaqah, onSaveRep
       setIsModified(true);
   };
 
-  const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        const textarea = e.currentTarget;
-        const { value, selectionStart } = textarea;
-        
-        const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
-        const currentLine = value.substring(lineStart, selectionStart);
-        
-        const bulletMatch = currentLine.match(/^(\s*)-(\s*)/);
-
-        if (bulletMatch) {
-            e.preventDefault();
-            
-            const indent = bulletMatch[1] || '';
-            const contentAfterBullet = currentLine.substring(bulletMatch[0].length);
-
-            if (contentAfterBullet.trim() === '') {
-                const newValue = value.substring(0, lineStart) + value.substring(selectionStart);
-                textarea.value = newValue;
-                textarea.selectionStart = textarea.selectionEnd = lineStart;
-            } else {
-                const nextBullet = `\n${indent}- `;
-                const newValue = value.substring(0, selectionStart) + nextBullet + value.substring(selectionStart);
-                textarea.value = newValue;
-                const newCursorPos = selectionStart + nextBullet.length;
-                textarea.selectionStart = textarea.selectionEnd = newCursorPos;
-            }
-
-            const event = new Event('input', { bubbles: true });
-            textarea.dispatchEvent(event);
-        }
-    }
-  };
-
   const handleSave = () => {
     if (currentReport) {
       onSaveReport(schoolClass.id, halaqah.id, currentReport);
@@ -202,12 +167,12 @@ const ReportCard: React.FC<ReportCardProps> = ({ schoolClass, halaqah, onSaveRep
   
   // FIX: Use snake_case keys
   const reportFields: { key: ReportField, label: string, placeholder: string }[] = [
-    { key: 'main_insight', label: 'Insight Utama', placeholder: 'Tuliskan poin-poin insight di sini...' },
-    { key: 'student_segmentation', label: 'Segmentasi Murid', placeholder: 'Jelaskan poin-poin segmentasi murid...' },
-    { key: 'identified_challenges', label: 'Tantangan Terindikasi', placeholder: 'Jelaskan poin-poin tantangan...' },
-    { key: 'follow_up_recommendations', label: 'Rekomendasi Tindak Lanjut', placeholder: 'Jelaskan poin-poin rekomendasi...' },
-    { key: 'next_month_target', label: 'Target Bulan Depan', placeholder: 'Jelaskan poin-poin target...' },
-    { key: 'coordinator_notes', label: 'Catatan Koordinator', placeholder: 'Tuliskan catatan atau feedback untuk guru...' },
+    { key: 'main_insight', label: 'Insight Utama', placeholder: 'Tuliskan poin-poin insight di sini...\n- Poin pertama\n- Poin kedua' },
+    { key: 'student_segmentation', label: 'Segmentasi Murid', placeholder: 'Jelaskan poin-poin segmentasi murid...\n- Poin pertama\n- Poin kedua' },
+    { key: 'identified_challenges', label: 'Tantangan Terindikasi', placeholder: 'Jelaskan poin-poin tantangan...\n- Poin pertama\n- Poin kedua' },
+    { key: 'follow_up_recommendations', label: 'Rekomendasi Tindak Lanjut', placeholder: 'Jelaskan poin-poin rekomendasi...\n- Poin pertama\n- Poin kedua' },
+    { key: 'next_month_target', label: 'Target Bulan Depan', placeholder: 'Jelaskan poin-poin target...\n- Poin pertama\n- Poin kedua' },
+    { key: 'coordinator_notes', label: 'Catatan Koordinator', placeholder: 'Tuliskan catatan atau feedback untuk guru...\n- Poin pertama\n- Poin kedua' },
   ];
 
   if (!currentReport) {
@@ -252,15 +217,13 @@ const ReportCard: React.FC<ReportCardProps> = ({ schoolClass, halaqah, onSaveRep
                             value={section.title}
                             onChange={(e) => handleSectionChange(field.key, section.id, 'title', e.target.value)}
                             placeholder={`Judul Bagian ${index + 1}`}
-                            className="w-full text-md font-semibold p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 transition mb-2"
+                            className="w-full text-md font-semibold p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 transition mb-3"
                         />
                         <textarea
-                            rows={4}
-                            value={section.content}
-                            onKeyDown={handleTextareaKeyDown}
-                            onChange={(e) => handleSectionChange(field.key, section.id, 'content', e.target.value)}
-                            placeholder={field.placeholder}
-                            className="w-full text-md p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500 transition"
+                           value={section.content}
+                           onChange={(e) => handleSectionChange(field.key, section.id, 'content', e.target.value)}
+                           placeholder={field.placeholder}
+                           className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                         />
                          <button onClick={() => handleRemoveSection(field.key, section.id)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             <TrashIcon className="w-4 h-4" />

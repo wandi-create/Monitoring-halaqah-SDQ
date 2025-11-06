@@ -19,69 +19,42 @@ interface ReportDetailModalProps {
     currentUser: User;
 }
 
-const renderContentToHTML = (text: string) => {
-    if (!text || text.trim() === '') {
+const renderContentToHTML = (content: string | null | undefined): string => {
+    if (!content || content.trim() === '') {
         return '<p class="italic text-gray-400">Tidak ada konten.</p>';
     }
 
-    const lines = text.split('\n');
+    const lines = content.trim().split('\n');
     let html = '';
-    let listLevel = 0; // 0 = no list, 1 = ul, 2 = nested ul
+    let inList = false;
 
-    const processBold = (str: string) => str.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-    lines.forEach(line => {
-        if (line.trim().startsWith('-- ')) {
-            const content = processBold(line.trim().substring(3));
-            if (listLevel < 1) { // Started nested without parent, treat as level 1
-                html += '<ul>';
-                listLevel = 1;
+    for (const line of lines) {
+        const trimmedLine = line.trim();
+        if (trimmedLine.startsWith('- ')) {
+            if (!inList) {
+                html += '<ul class="list-disc list-outside pl-5 space-y-1">';
+                inList = true;
             }
-            if (listLevel < 2) {
-                // remove closing </li> from previous item to start a nested list
-                if (html.endsWith('</li>')) {
-                    html = html.slice(0, -5);
-                }
-                html += '<ul>';
-                listLevel = 2;
-            }
-            html += `<li>${content}</li>`;
-        } else if (line.trim().startsWith('- ')) {
-            const content = processBold(line.trim().substring(2));
-            if (listLevel === 2) {
-                html += '</ul></li>'; // close nested list and its parent li
-                listLevel = 1;
-            }
-            if (listLevel < 1) {
-                html += '<ul>';
-                listLevel = 1;
-            }
-            html += `<li>${content}</li>`;
-        } else { // Not a list item
-            if (listLevel === 2) {
-                html += '</ul></li>';
-                listLevel = 1;
-            }
-            if (listLevel === 1) {
+            const itemContent = trimmedLine.substring(2).trim();
+            html += `<li>${itemContent}</li>`;
+        } else {
+            if (inList) {
                 html += '</ul>';
-                listLevel = 0;
+                inList = false;
             }
-            
-            if (line.trim()) {
-                html += `<p>${processBold(line.trim())}</p>`;
+            if (trimmedLine) { // Avoid creating empty paragraphs
+                html += `<p>${trimmedLine}</p>`;
             }
         }
-    });
+    }
 
-    // Close any remaining tags
-    if (listLevel === 2) {
-        html += '</ul></li>';
-    } else if (listLevel === 1) {
+    if (inList) {
         html += '</ul>';
     }
-    
+
     return html;
 };
+
 
 const normalizeReportField = (fieldData: any, defaultTitle: string): ReportSection[] => {
   // Case 1: Already a valid ReportSection array
@@ -217,7 +190,7 @@ const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ report, onClose, 
                                         <div key={section.id} className="bg-white p-5 rounded-lg border">
                                             <h4 className="text-md font-semibold text-gray-700 mb-2">{section.title}</h4>
                                             <div
-                                                className="text-gray-700 leading-relaxed max-w-none prose prose-sm"
+                                                className="prose prose-sm max-w-none text-gray-700"
                                                 dangerouslySetInnerHTML={{ __html: renderContentToHTML(section.content || '') }}
                                             />
                                         </div>
