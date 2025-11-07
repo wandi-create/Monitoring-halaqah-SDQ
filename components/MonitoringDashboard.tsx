@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { SchoolClass, User, Report, Halaqah } from '../types';
-import { ClockIcon, EyeIcon, CheckCircleIcon, XCircleIcon, UsersIcon, DocumentTextIcon } from './Icons';
+import { ClockIcon, EyeIcon, CheckCircleIcon, XCircleIcon, UsersIcon, DocumentTextIcon, PencilIcon, ExclamationTriangleIcon } from './Icons';
 import ReportDetailModal from './ReportDetailModal';
 import { MONTHS } from '../constants';
 
@@ -70,6 +70,17 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ classes, curr
     allHalaqahs.filter(h => h.laporan?.some(r => r.year === selectedYear && r.month === selectedMonth)).length
   , [allHalaqahs, selectedYear, selectedMonth]);
 
+  const reportsForSelectedPeriod = useMemo(() =>
+    allHalaqahs
+      .flatMap(h => h.laporan?.filter(r => r.year === selectedYear && r.month === selectedMonth) || [])
+  , [allHalaqahs, selectedYear, selectedMonth]);
+
+  const belumDibacaCount = useMemo(() => reportsForSelectedPeriod.filter(r => r.follow_up_status === 'Belum Dibaca').length, [reportsForSelectedPeriod]);
+  const sudahDibacaCount = useMemo(() => reportsForSelectedPeriod.filter(r => r.follow_up_status === 'Sudah Dibaca').length, [reportsForSelectedPeriod]);
+  const sedangBerjalanCount = useMemo(() => reportsForSelectedPeriod.filter(r => r.follow_up_status === 'Sedang Berjalan').length, [reportsForSelectedPeriod]);
+  const selesaiCount = useMemo(() => reportsForSelectedPeriod.filter(r => r.follow_up_status === 'Selesai').length, [reportsForSelectedPeriod]);
+  const butuhDiskusiCount = useMemo(() => reportsForSelectedPeriod.filter(r => r.teacher_notes && r.teacher_notes.trim() !== '' && r.follow_up_status !== 'Selesai').length, [reportsForSelectedPeriod]);
+
 
   const TabButton: React.FC<{ title: string; count: number; active: boolean; onClick: () => void; }> = ({ title, count, active, onClick }) => (
     <button
@@ -115,6 +126,17 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ classes, curr
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <StatCard icon={<DocumentTextIcon className="w-6 h-6"/>} title="Laporan Bulan Ini" value={`${submittedReportsCount} / ${allHalaqahs.length}`} color="#34d399" />
           <StatCard icon={<CheckCircleIcon className="w-6 h-6"/>} title="Total Halaqah" value={allHalaqahs.length} color="#a78bfa" />
+      </div>
+
+       <div className="mb-8">
+        <h2 className="text-xl font-bold text-gray-700 mb-4">Status Akuntabilitas Guru</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+            <StatCard icon={<ClockIcon className="w-6 h-6"/>} title="Belum Dibaca" value={belumDibacaCount} color="#9ca3af" />
+            <StatCard icon={<EyeIcon className="w-6 h-6"/>} title="Sudah Dibaca" value={sudahDibacaCount} color="#f59e0b" />
+            <StatCard icon={<PencilIcon className="w-6 h-6"/>} title="Sedang Berjalan" value={sedangBerjalanCount} color="#3b82f6" />
+            <StatCard icon={<CheckCircleIcon className="w-6 h-6"/>} title="Selesai" value={selesaiCount} color="#10b981" />
+            <StatCard icon={<ExclamationTriangleIcon className="w-6 h-6"/>} title="Butuh Diskusi" value={butuhDiskusiCount} color="#ef4444" />
+        </div>
       </div>
 
 

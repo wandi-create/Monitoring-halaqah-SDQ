@@ -183,7 +183,7 @@ const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ report, onClose, 
     };
 
     const isGuru = currentUser.role === 'Guru';
-    const followUpOptions: FollowUpStatus[] = ['Belum Dimulai', 'Sedang Berjalan', 'Selesai', 'Butuh Diskusi'];
+    const followUpOptions: FollowUpStatus[] = ['Belum Dibaca', 'Sudah Dibaca', 'Sedang Berjalan', 'Selesai', 'Butuh Diskusi'];
 
     const getNextMonthDetails = () => {
         if (!report?.month || !report?.year) return '';

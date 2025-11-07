@@ -141,7 +141,7 @@ const App: React.FC = () => {
               next_month_target: r.next_month_target || [],
               coordinator_notes: r.coordinator_notes || [],
               is_read: r.is_read || false,
-              follow_up_status: r.follow_up_status || 'Belum Dimulai',
+              follow_up_status: r.follow_up_status || 'Belum Dibaca',
               teacher_notes: r.teacher_notes || '',
             }));
 

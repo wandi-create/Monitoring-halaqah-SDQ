@@ -30,7 +30,8 @@ const StatusPill: React.FC<{ isDone: boolean; textDone: string; textNotDone: str
 
 const FollowUpStatusPill: React.FC<{ status: FollowUpStatus }> = ({ status }) => {
   const statusStyles: Record<FollowUpStatus, string> = {
-    'Belum Dimulai': 'bg-gray-100 text-gray-800',
+    'Belum Dibaca': 'bg-gray-100 text-gray-800',
+    'Sudah Dibaca': 'bg-yellow-100 text-yellow-800',
     'Sedang Berjalan': 'bg-blue-100 text-blue-800',
     'Selesai': 'bg-green-100 text-green-800',
     'Butuh Diskusi': 'bg-red-100 text-red-800',
