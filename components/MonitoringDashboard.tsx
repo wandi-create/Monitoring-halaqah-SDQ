@@ -218,7 +218,7 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ classes, curr
                         )}
                         {currentReport && (
                             <button onClick={() => handleViewReport(currentReport, halaqah, schoolClass)} className="p-2 text-gray-500 hover:text-white hover:bg-teal-500 rounded-md transition-all" aria-label="Lihat Laporan">
-                                <bookOpenIcon className="w-5 h-5"/>
+                                <BookOpenIcon className="w-5 h-5"/>
                             </button>
                         )}
                       </div>
