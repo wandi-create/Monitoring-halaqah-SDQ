@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { SchoolClass, User, Report, Halaqah } from '../types';
-import { ClockIcon, EyeIcon, CheckCircleIcon, XCircleIcon, UsersIcon, DocumentTextIcon, PencilIcon, ExclamationTriangleIcon } from './Icons';
+import { SchoolClass, User, Report, Halaqah, ReportSection } from '../types';
+import { ClockIcon, EyeIcon, CheckCircleIcon, XCircleIcon, UsersIcon, DocumentTextIcon, PencilIcon, ExclamationTriangleIcon, BookOpenIcon } from './Icons';
 import ReportDetailModal from './ReportDetailModal';
 import { MONTHS } from '../constants';
 
@@ -28,6 +28,25 @@ const StatCard: React.FC<{ icon: React.ReactNode; title: string; value: string |
         </div>
     </div>
 );
+
+// Helper function to determine if a report is considered "substantive" or "finished"
+const isReportSubstantive = (report: Report): boolean => {
+  // A report is considered substantive if at least one of its main content sections has been filled out.
+  const fieldsToCheck: (keyof Report)[] = [
+    'main_insight',
+    'student_segmentation',
+    'identified_challenges',
+    'follow_up_recommendations',
+    'next_month_target',
+    'coordinator_notes',
+  ];
+
+  return fieldsToCheck.some(field => {
+    const sections = report[field] as ReportSection[];
+    // Check if the field is an array and contains at least one section with non-empty content.
+    return Array.isArray(sections) && sections.some(section => section.content && section.content.trim() !== '');
+  });
+};
 
 
 const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ classes, currentUser, onUpdateReport }) => {
@@ -67,19 +86,21 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ classes, curr
   , [classes]);
 
   const submittedReportsCount = useMemo(() =>
-    allHalaqahs.filter(h => h.laporan?.some(r => r.year === selectedYear && r.month === selectedMonth)).length
+    allHalaqahs.filter(h => h.laporan?.some(r => r.year === selectedYear && r.month === selectedMonth && isReportSubstantive(r))).length
   , [allHalaqahs, selectedYear, selectedMonth]);
 
   const reportsForSelectedPeriod = useMemo(() =>
     allHalaqahs
       .flatMap(h => h.laporan?.filter(r => r.year === selectedYear && r.month === selectedMonth) || [])
+      // MUTLAK: Filter only reports that are considered complete/substantive by the coordinator.
+      .filter(isReportSubstantive)
   , [allHalaqahs, selectedYear, selectedMonth]);
 
-  const belumDibacaCount = useMemo(() => reportsForSelectedPeriod.filter(r => r.follow_up_status === 'Belum Dibaca').length, [reportsForSelectedPeriod]);
-  const sudahDibacaCount = useMemo(() => reportsForSelectedPeriod.filter(r => r.follow_up_status === 'Sudah Dibaca').length, [reportsForSelectedPeriod]);
+  const belumDibacaCount = useMemo(() => reportsForSelectedPeriod.filter(r => !r.is_read).length, [reportsForSelectedPeriod]);
+  const sudahDibacaCount = useMemo(() => reportsForSelectedPeriod.filter(r => r.is_read).length, [reportsForSelectedPeriod]);
   const sedangBerjalanCount = useMemo(() => reportsForSelectedPeriod.filter(r => r.follow_up_status === 'Sedang Berjalan').length, [reportsForSelectedPeriod]);
   const selesaiCount = useMemo(() => reportsForSelectedPeriod.filter(r => r.follow_up_status === 'Selesai').length, [reportsForSelectedPeriod]);
-  const butuhDiskusiCount = useMemo(() => reportsForSelectedPeriod.filter(r => r.teacher_notes && r.teacher_notes.trim() !== '' && r.follow_up_status !== 'Selesai').length, [reportsForSelectedPeriod]);
+  const butuhDiskusiCount = useMemo(() => reportsForSelectedPeriod.filter(r => r.follow_up_status === 'Butuh Diskusi').length, [reportsForSelectedPeriod]);
 
 
   const TabButton: React.FC<{ title: string; count: number; active: boolean; onClick: () => void; }> = ({ title, count, active, onClick }) => (
@@ -132,7 +153,7 @@ const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ classes, curr
         <h2 className="text-xl font-bold text-gray-700 mb-4">Status Akuntabilitas Guru</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
             <StatCard icon={<ClockIcon className="w-6 h-6"/>} title="Belum Dibaca" value={belumDibacaCount} color="#9ca3af" />
-            <StatCard icon={<EyeIcon className="w-6 h-6"/>} title="Sudah Dibaca" value={sudahDibacaCount} color="#f59e0b" />
+            <StatCard icon={<BookOpenIcon className="w-6 h-6"/>} title="Sudah Dibaca" value={sudahDibacaCount} color="#f59e0b" />
             <StatCard icon={<PencilIcon className="w-6 h-6"/>} title="Sedang Berjalan" value={sedangBerjalanCount} color="#3b82f6" />
             <StatCard icon={<CheckCircleIcon className="w-6 h-6"/>} title="Selesai" value={selesaiCount} color="#10b981" />
             <StatCard icon={<ExclamationTriangleIcon className="w-6 h-6"/>} title="Butuh Diskusi" value={butuhDiskusiCount} color="#ef4444" />

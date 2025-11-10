@@ -119,7 +119,7 @@ const ReportCard: React.FC<ReportCardProps> = ({ schoolClass, halaqah, onSaveRep
         year, 
         month,
         is_read: existingReport?.is_read || false,
-        follow_up_status: existingReport?.follow_up_status || 'Belum Dibaca',
+        follow_up_status: existingReport?.follow_up_status || 'Belum Dimulai',
         teacher_notes: existingReport?.teacher_notes || '',
     };
   }, [halaqah.laporan, halaqah.id]);

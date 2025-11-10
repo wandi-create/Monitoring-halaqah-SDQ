@@ -183,7 +183,14 @@ const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ report, onClose, 
     };
 
     const isGuru = currentUser.role === 'Guru';
-    const followUpOptions: FollowUpStatus[] = ['Belum Dibaca', 'Sudah Dibaca', 'Sedang Berjalan', 'Selesai', 'Butuh Diskusi'];
+    const followUpOptions: { value: FollowUpStatus; label: string }[] = [
+        { value: 'Belum Dimulai', label: 'Belum Dimulai' },
+        { value: 'Sudah Dilihat', label: 'Sudah Dilihat' },
+        { value: 'Sedang Berjalan', label: 'Sedang Berjalan' },
+        { value: 'Selesai', label: 'Selesai' },
+        { value: 'Butuh Diskusi', label: 'Butuh Diskusi' },
+    ];
+
 
     const getNextMonthDetails = () => {
         if (!report?.month || !report?.year) return '';
@@ -274,7 +281,7 @@ const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ report, onClose, 
                                     disabled={!isGuru}
                                     className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 disabled:bg-gray-100 disabled:opacity-70"
                                 >
-                                    {followUpOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                    {followUpOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                                 </select>
                             </div>
 

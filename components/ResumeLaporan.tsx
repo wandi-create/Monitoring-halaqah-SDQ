@@ -28,17 +28,25 @@ const StatusPill: React.FC<{ isDone: boolean; textDone: string; textNotDone: str
     </div>
 );
 
+const statusLabels: Record<FollowUpStatus, string> = {
+  'Belum Dimulai': 'Belum Dimulai',
+  'Sudah Dilihat': 'Sudah Dilihat',
+  'Sedang Berjalan': 'Sedang Berjalan',
+  'Selesai': 'Selesai',
+  'Butuh Diskusi': 'Butuh Diskusi',
+};
+
 const FollowUpStatusPill: React.FC<{ status: FollowUpStatus }> = ({ status }) => {
   const statusStyles: Record<FollowUpStatus, string> = {
-    'Belum Dibaca': 'bg-gray-100 text-gray-800',
-    'Sudah Dibaca': 'bg-yellow-100 text-yellow-800',
+    'Belum Dimulai': 'bg-gray-100 text-gray-800',
+    'Sudah Dilihat': 'bg-yellow-100 text-yellow-800',
     'Sedang Berjalan': 'bg-blue-100 text-blue-800',
     'Selesai': 'bg-green-100 text-green-800',
     'Butuh Diskusi': 'bg-red-100 text-red-800',
   };
   return (
     <div className={`flex items-center text-xs font-medium px-2.5 py-1 rounded-full w-fit ${statusStyles[status]}`}>
-      <span>{status}</span>
+      <span>{statusLabels[status]}</span>
     </div>
   );
 };

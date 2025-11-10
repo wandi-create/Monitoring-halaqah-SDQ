@@ -7,7 +7,7 @@ export interface User {
   gender: 'Ikhwan' | 'Akhwat';
 }
 
-export type FollowUpStatus = 'Belum Dibaca' | 'Sudah Dibaca' | 'Sedang Berjalan' | 'Selesai' | 'Butuh Diskusi';
+export type FollowUpStatus = 'Belum Dimulai' | 'Sudah Dilihat' | 'Sedang Berjalan' | 'Selesai' | 'Butuh Diskusi';
 
 export interface ReportSection {
   id: string;
