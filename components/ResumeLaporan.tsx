@@ -163,7 +163,7 @@ const ResumeLaporan: React.FC<ResumeLaporanProps> = ({ classes, currentUser, onU
                                         className="inline-flex items-center gap-1.5 text-sm font-semibold py-2 px-3 rounded-lg transition-all shadow-sm text-teal-600 bg-teal-100 hover:bg-teal-200"
                                         aria-label="Lihat Detail Laporan"
                                     >
-                                        < EyeIcon className="w-4 h-4"/>
+                                        <EyeIcon className="w-4 h-4"/>
                                         <span>Lihat Detail</span>
                                     </button>
                                 </td>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { User, SchoolClass } from '../types';
 import { PlusIcon, PencilIcon, TrashIcon, CloseIcon, SaveIcon, ArrowUturnLeftIcon } from './Icons';
 
@@ -159,6 +159,45 @@ const TeacherManagement: React.FC<TeacherManagementProps> = ({ teachers, classes
             .join(', ');
     };
 
+    const sortedTeachers = useMemo(() => {
+        const roleOrder: Record<User['role'], number> = { 'Kepala Sekolah': 1, 'Koordinator': 2, 'Guru': 3 };
+
+        const teacherClassLevelMap = new Map<string, number>();
+        classes.forEach(schoolClass => {
+            const match = schoolClass.name.match(/Kelas (\d+)/i);
+            const level = match ? parseInt(match[1], 10) : Infinity;
+
+            schoolClass.halaqah.forEach(halaqah => {
+                if (halaqah.teacher_id) {
+                    const currentTeacherLevel = teacherClassLevelMap.get(halaqah.teacher_id) || Infinity;
+                    if (level < currentTeacherLevel) {
+                        teacherClassLevelMap.set(halaqah.teacher_id, level);
+                    }
+                }
+            });
+        });
+
+        return [...teachers].sort((a, b) => {
+            const roleA = roleOrder[a.role] || 99;
+            const roleB = roleOrder[b.role] || 99;
+
+            if (roleA !== roleB) {
+                return roleA - roleB;
+            }
+
+            if (a.role === 'Guru' && b.role === 'Guru') {
+                const levelA = teacherClassLevelMap.get(a.id) || Infinity;
+                const levelB = teacherClassLevelMap.get(b.id) || Infinity;
+
+                if (levelA !== levelB) {
+                    return levelA - levelB;
+                }
+            }
+
+            return a.name.localeCompare(b.name);
+        });
+    }, [teachers, classes]);
+
   return (
     <>
       <header className="mb-6 flex justify-between items-center">
@@ -186,7 +225,7 @@ const TeacherManagement: React.FC<TeacherManagementProps> = ({ teachers, classes
                     </tr>
                 </thead>
                 <tbody>
-                    {teachers.map(teacher => (
+                    {sortedTeachers.map(teacher => (
                         <tr key={teacher.id} className="bg-white border-b hover:bg-gray-50">
                             <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
                                 {teacher.name}
@@ -210,7 +249,7 @@ const TeacherManagement: React.FC<TeacherManagementProps> = ({ teachers, classes
                             </td>
                         </tr>
                     ))}
-                    {teachers.length === 0 && (
+                    {sortedTeachers.length === 0 && (
                         <tr>
                             <td colSpan={4} className="text-center py-8 text-gray-500">
                                 Belum ada data user.
